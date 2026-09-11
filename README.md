@@ -1,22 +1,77 @@
-# Aegis-SEOS — AI-Native Engineering Operating System
+# Aegis-SEOS: AI-Native Engineering Operating System
 
 > **Triết lý cốt lõi (Core Philosophy):**  
 > *"Tài liệu là hệ điều hành (Docs-as-an-OS), Code là kết quả phái sinh, Session AI là tiến trình độc lập và dùng một lần (Disposable Process)."*
 
-**Aegis-SEOS** là bộ khung vận hành phần mềm theo mô hình AI-Native có kỷ luật kỹ thuật khắt khe. Hệ thống giải quyết triệt để các vấn đề thường gặp khi phát triển phần mềm cùng AI: **Ảo giác (Hallucination)**, **Phình token (Context bloat)**, **Mất kiểm soát ranh giới kiến trúc (Architectural decay)** và **Kho tài liệu biến thành bãi rác (Project Junkyard)**.
+**Aegis-SEOS** là bộ khung vận hành phát triển phần mềm AI-Native, tập trung giảm thiểu các vấn đề thường gặp khi Developer làm việc cùng AI: **Ảo giác (Hallucination)**, **Phình token (Context bloat)**, **Xói mòn ranh giới kiến trúc (Architectural decay)** và **Kho tài liệu biến thành bãi rác (Document sprawl / Project Junkyard)**.
 
 ---
 
-## 🌟 Điểm Nhấn Kiến Trúc & Tính Năng Nổi Bật
+## 🌟 Tính Năng & Rào Chắn Nổi Bật
 
-* **Hiến pháp Tối cao ([AGENTS.md](AGENTS.md))**: Quy chuẩn vận hành xác định (Deterministic Operating Contract) dành cho mọi AI Agent và Developer, thiết lập rõ thứ bậc nguồn sự thật (Hierarchy of Truth) và rào chắn an toàn.
-* **Máy Chấm Tự Động ([Fitness Functions](docs/fitness-functions/architecture-rules.md))**: Xác thực ranh giới phân tầng qua `npm run test:fitness` — tự động chặn đứng mã nguồn vi phạm tầng Domain, rò rỉ secrets ra Client components, hoặc truy cập biến môi trường không qua schema.
-* **Ngăn Ngừa Ảo Giác Với [Context Packages](docs/context-packages/README.md)**: Thiết kế gói ngữ cảnh chuyên biệt với giới hạn Token trần (`Must Load`, `Optional`, `Do Not Load`), giữ session tinh gọn (< 30k tokens).
-* **Phân Tách Definition of Done (DoD)**:
-  * **Standard DoD**: Chu trình 3 bước chuẩn mực cho tính năng mới, tái cấu trúc hoặc sửa lỗi nghiệp vụ.
-  * **Fast Track DoD**: Luồng xử lý nhanh cho tài liệu, typo, CSS layout thuần và kiểm thử đơn vị độc lập.
-* **Ranh Giới Luồng Sống Còn ([Critical Flows](docs/business-metrics/critical-flows.md))**: Phân cấp rõ nét từ P0 (System Survival) đến P4 (Nice to have), kích hoạt mức độ nhạy cảm tự động dựa trên bán kính tác động (Blast Radius).
-* **Quản Lý Vòng Đời Tri Thức ([Knowledge Lifecycle](docs/governance/knowledge-lifecycle.md))**: Chu kỳ dọn dẹp, đóng băng và lưu trữ tự động sau 6–12 tháng cho Task files, Incidents và ADRs.
+- **[Hiến pháp Tối cao](AGENTS.md)**: Bản thỏa ước vận hành chuẩn mực (Unified Operating Contract) cho cả Developer và AI Agent, xác lập thứ bậc nguồn sự thật (Hierarchy of Truth) và các ranh giới bất biến.
+- **[Máy Chấm Ranh Giới Tự Động](docs/fitness-functions/architecture-rules.md)**: Xác thực các luật Machine-enforced qua `npm run test:fitness` — ngăn chặn sớm việc vi phạm tính thuần khiết của tầng Domain, rò rỉ server secrets sang Client components, hoặc gọi trực tiếp biến môi trường không qua schema.
+- **[Ngăn Ngừa Ảo Giác Với Context Packages](docs/context-packages/README.md)**: Gói ngữ cảnh thiết kế tinh gọn theo từng task (khuyến nghị <= 15k tokens); toàn bộ Investigation Session duy trì trong ngưỡng an toàn (<= 30k tokens).
+- **Phân Tách Definition of Done (DoD)**:
+  - **Standard DoD**: Áp dụng cho Standard 3-Step Path đối với tính năng mới, thay đổi nghiệp vụ, sửa lỗi phức tạp hoặc can thiệp schema.
+  - **Fast Track DoD**: Luồng xử lý tinh gọn cho tài liệu, sửa lỗi chính tả (typo), CSS thuần không đổi layout tree, hoặc bổ sung unit test độc lập.
+- **[Phân Cấp Luồng Sống Còn](docs/business-metrics/critical-flows.md)**: Phân tầng rõ rệt từ P0 (System Survival) đến P4 (Nice to have), kích hoạt mức độ nhạy cảm tự động dựa trên bán kính tác động (Impact-based risk / Blast Radius).
+- **[Quản Lý Vòng Đời Tri Thức](docs/governance/knowledge-lifecycle.md)**: Quy định chu kỳ rà soát, dọn dẹp và lưu trữ (Retention & Archive) Task files, Incidents và ADRs sau 6–12 tháng nhằm giữ kho tài liệu luôn gọn gàng, chống quá tải token.
+
+---
+
+## ⚡ Hướng Dẫn Bắt Đầu Nhanh (Quick Start)
+
+### 1. Khởi Tạo & Chạy Máy Chấm Kiến Trúc
+Xem hướng dẫn chi tiết về cấu hình môi trường tại [HOW_WE_WORK.md](docs/HOW_WE_WORK.md). Sau khi chuẩn bị môi trường, bạn có thể chạy máy chấm ranh giới kiến trúc:
+
+```bash
+npm run test:fitness
+```
+
+### 2. Quy Trình Làm Việc Hàng Ngày: Standard Path vs Fast Track
+
+- **Standard 3-Step Path**: Bắt buộc áp dụng cho các thay đổi nghiệp vụ, đa module, schema/database hoặc các tác vụ có khả năng ảnh hưởng đến luồng P0/P1:
+  ```text
+  [BƯỚC 1: SOẠN BATCH PROMPT]  ──▶  [BƯỚC 2: SESSION ĐIỀU TRA]  ──▶  [BƯỚC 3: SESSION THỰC THI]
+    Tạo 1 file prompt tập trung      Trace code, nạp Context Package      Kiểm tra approved -> Sửa spec
+    tại docs/tasks/<request>.md       Xuất task-N-fix.md (status: draft)   Sửa code phẫu thuật -> Run fitness
+    Không sửa code sớm.              Dev duyệt -> status: approved        Conditional Commit trên branch riêng
+  ```
+- **Fast Track**: Dành cho các thay đổi nhỏ, không thay đổi runtime behavior và không chạm vào bất kỳ Hard Stop nào (Public API, Database, Auth, Business logic, P0/P1). Quy trình: `Điều tra nhanh -> Sửa code -> Chạy test/fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit`.
+
+> [!NOTE]
+> Chi tiết điều kiện Fast Track và rào chắn dừng khẩn cấp (Hard Stop) được quy định tại [AGENTS.md](AGENTS.md).
+
+### 3. Quy Chuẩn Nhánh Git & Cam Kết Có Điều Kiện
+
+- **Tuyệt đối không commit trực tiếp lên `main` / `master`**. Mọi công việc bắt buộc thực hiện trên branch riêng:
+  - `task/<ten-task>`: Yêu cầu công việc tổng hợp.
+  - `feat/<ten-feature>`: Phát triển tính năng mới.
+  - `fix/<ten-bug>`: Sửa lỗi hệ thống.
+  - `hotfix/<incident-code>`: Vá khẩn cấp cho sự cố production đã xác nhận.
+- **Cam Kết Có Điều Kiện (Conditional Commit)**: AI chỉ tạo local commit khi Developer hoặc repository policy cho phép và toàn bộ điều kiện sau được thỏa mãn:
+  1. Working tree chỉ chứa các thay đổi thuộc phạm vi task; không chứa file rác, file `.env`, credentials hoặc thay đổi ngoài scope. Nếu có baseline bẩn từ trước, phải bảo toàn baseline và không pha trộn vào commit.
+  2. Toàn bộ automated tests liên quan đều PASS (`npm test` nếu có cấu hình).
+  3. Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
+  4. Không còn giả định mở hay mâu thuẫn tài liệu chưa giải quyết.
+  5. Đang ở trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, `hotfix/*`).
+  6. Sau commit, không còn thay đổi chưa xử lý thuộc scope của task; mọi thay đổi baseline có sẵn từ trước phải được giữ nguyên và ghi nhận rõ.
+
+---
+
+## 🛡️ 9 Ranh Giới Kỹ Thuật & 1 Verification Gate
+
+1. **Domain Pure**: `src/domain/` độc lập hoàn toàn, cấm import DB client, ORMs, frameworks, network clients hoặc UI. _Machine-enforced_
+2. **Client/Server Isolation**: File `'use client'` cấm import DB client, server secrets hoặc server-only modules. _Machine-enforced_
+3. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`). _Machine-enforced_
+4. **Server Trust Boundary**: Mọi truy vấn CSDL phải scope theo `userId`/`tenantId` từ session đã xác thực ở server; không tin cậy client params. _Review-enforced_
+5. **Stateless Services**: Service singletons cấm lưu trạng thái người dùng trong biến `this.*`; toàn bộ context phải truyền qua tham số hàm. _Review-enforced_
+6. **Idempotent Master Seeds**: Mọi dữ liệu hạt giống (seed) bắt buộc có canonical deterministic key và upsert lũy đẳng. _Review-enforced_
+7. **Expand-and-Contract Migrations**: Không bao giờ xóa hoặc đổi tên cột DB cùng một lần release; tuân thủ chu trình Expand -> Backfill -> Read Transition -> Contract. _Review-enforced_
+8. **Độ Nhạy Theo Tác Động (Blast Radius)**: Task có khả năng ảnh hưởng trực tiếp hoặc gián tiếp đến invariant, contract hoặc runtime path của luồng P0/P1 phải được nâng lên `risk_level: HIGH/CRITICAL` và không được dùng Fast Track. _Review-enforced_
+9. **Performance & Observability Guardrails**: List queries trên runtime path phải có giới hạn theo API contract; các flow P0/P1 phải đáp ứng yêu cầu structured logging, correlation ID và alerting tương ứng. _Review-enforced_
+10. **Architecture Fitness Gate**: Bắt buộc chạy `npm run test:fitness` khi script tồn tại và phạm vi công việc yêu cầu. Kết quả PASS xác nhận các luật Machine-enforced hiện được validator hỗ trợ. _Verification gate_
 
 ---
 
@@ -31,7 +86,7 @@
 │   ├── HOW_WE_WORK.md                   # Cẩm nang toàn diện: Onboarding & Bootstrap
 │   ├── context-packages/                # First-Class Context Packages (< 15k tokens)
 │   ├── operations/
-│   │   ├── quick-checklist.md           # One-Pager: 10 điều bất biến & DoD
+│   │   ├── quick-checklist.md           # One-Pager: 9 ranh giới, verification gate & DoD
 │   │   └── preflight-checklist.md       # Checklist kiểm định trước release/PR
 │   ├── system-map/
 │   │   ├── modules.md                   # Phân tầng kiến trúc (Domain, Service, Infra, UI)
@@ -61,58 +116,7 @@
 
 ---
 
-## ⚡ Hướng Dẫn Bắt Đầu Nhanh (Quick Start)
-
-### 1. Cài Đặt & Chạy Máy Chấm Kiến Trúc
-```bash
-# Kiểm tra máy chấm ranh giới kiến trúc tự động
-npm run test:fitness
-```
-
-### 2. Chu Trình Làm Việc Hàng Ngày Giữa Dev & AI
-
-Quy trình phát triển tuân thủ nghiêm ngặt **Quy trình Chuẩn 3 bước (Standard 3-Step Path)**:
-
-```text
-[BƯỚC 1: SOẠN BATCH PROMPT]  ──▶  [BƯỚC 2: SESSION ĐIỀU TRA]  ──▶  [BƯỚC 3: SESSION THỰC THI]
-  Tạo 1 file prompt tập trung      Trace code, nạp Context Package      Kiểm tra approved -> Sửa spec
-  tại docs/tasks/<request>.md       Xuất task-N-fix.md (status: draft)   Sửa code phẫu thuật -> Run fitness
-  Không sửa code sớm.              Dev duyệt -> status: approved        Conditional Commit trên branch riêng
-```
-
-### 3. Quy Chuẩn Nhánh Git & Cam Kết Có Điều Kiện
-- **Tuyệt đối không commit trực tiếp lên `main` / `master`**.
-- Mọi công việc bắt buộc thực hiện trên branch riêng:
-  - `task/<ten-task>`: Yêu cầu công việc tổng hợp.
-  - `feat/<ten-feature>`: Phát triển tính năng mới.
-  - `fix/<ten-bug>`: Sửa lỗi hệ thống.
-  - `hotfix/<incident-code>`: Vá khẩn cấp lỗi production.
-- **Conditional Commit**: AI chỉ được phép commit khi:
-  1. Working tree chỉ chứa thay đổi thuộc phạm vi task (bảo toàn baseline nếu có trước đó).
-  2. Toàn bộ automated tests liên quan đều PASS.
-  3. Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
-  4. Không còn giả định mở hay mâu thuẫn tài liệu chưa giải quyết.
-  5. Đang ở trên task branch hợp lệ.
-  6. Sau commit, working tree sạch sẽ không còn file dở dang.
-
----
-
-## 🛡️ 10 Ranh Giới Kỹ Thuật Bất Biến
-
-1. **Domain Pure**: `src/domain/` độc lập hoàn toàn, cấm import DB client, ORMs, frameworks hoặc UI. *(Machine-enforced)*
-2. **Client/Server Isolation**: File `'use client'` cấm import DB client hoặc secrets. *(Machine-enforced)*
-3. **No Raw Env**: Cấm gọi `process.env` trực tiếp, bắt buộc qua schema validate tập trung (`src/lib/env.ts`). *(Machine-enforced)*
-4. **Server Trust Boundary**: Mọi truy vấn CSDL phải scope theo `userId` từ session đã xác thực ở server. *(Review-enforced)*
-5. **Stateless Services**: Service singletons cấm lưu trạng thái người dùng trong biến `this.*`. *(Review-enforced)*
-6. **Idempotent Master Seeds**: Dữ liệu hạt giống bắt buộc có canonical key và upsert lũy đẳng. *(Review-enforced)*
-7. **Expand-and-Contract Migrations**: Không bao giờ xóa hoặc đổi tên cột DB cùng một lần release. *(Review-enforced)*
-8. **Độ Nhạy Theo Bán Kính Tác Động**: Task chạm luồng P0/P1 tự động nâng `risk_level: HIGH/CRITICAL`, cấm Fast Track. *(Review-enforced)*
-9. **Performance & Observability Guardrails**: Cấm truy vấn không giới hạn, bắt buộc phân trang chuẩn, structured logs và correlation ID. *(Review-enforced)*
-10. **Machine-Verified Fitness**: Bắt buộc `npm run test:fitness` trả về Exit code 0 trước khi kết thúc task. *(Machine-enforced)*
-
----
-
-## 📖 Tài Liệu Tham Khảo Nhanh
+## 📖 Mục Lục Tài Liệu Cốt Lõi
 
 * 📘 [Cẩm nang vận hành SEOS (HOW_WE_WORK.md)](docs/HOW_WE_WORK.md)
 * 📋 [Checklist 10 điều bất biến & DoD One-Pager (quick-checklist.md)](docs/operations/quick-checklist.md)
