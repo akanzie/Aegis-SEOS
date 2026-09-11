@@ -4,134 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { loadConfig, escapeRegExp } from './architecture-fitness-policy.mjs';
 
 const ROOT_DIR = process.cwd();
 const IS_STRICT = process.argv.includes('--strict');
-
-/**
- * Default Reference Architecture Policy for Aegis-SEOS (Node.js/TypeScript).
- * Individual repositories can override any of these options via architecture-fitness.config.mjs.
- */
-export const DEFAULT_CONFIG = {
-  // Directories to scan for source files
-  sourceRoots: ['src'],
-
-  // Glob, prefix, or RegExp patterns to identify Domain layer files
-  domainPatterns: [
-    'src/domain/',
-    'src/modules/*/domain/'
-  ],
-
-  // Client directive for React Server Components / UI files (set to null if backend-only)
-  clientDirective: 'use client',
-
-  // Forbidden modules in the Domain layer (Rule 1: Domain Purity)
-  forbiddenDomainModules: [
-    '@prisma',
-    'prisma',
-    'drizzle-orm',
-    'typeorm',
-    'mongoose',
-    'pg',
-    'mysql2',
-    '@/lib/db',
-    '@/infra/db',
-    'next',
-    'express',
-    'fastify',
-    'react',
-    'react-dom',
-    'axios'
-  ],
-
-  // Forbidden modules in Client Components (Rule 2: Client/Server Isolation)
-  forbiddenClientModules: [
-    '@prisma',
-    'prisma',
-    'drizzle-orm',
-    'typeorm',
-    'mongoose',
-    'pg',
-    'mysql2',
-    '@/lib/db',
-    '@/infra/db',
-    '@/server',
-    'server-only',
-    /^node:/
-  ],
-
-  // Centralized environment files permitted to access raw process.env (Rule 3)
-  allowedEnvFiles: [
-    'src/lib/env.ts',
-    'src/config/env.ts',
-    'src/lib/env.js',
-    'src/config/env.js',
-    'src/lib/env.mjs',
-    'src/config/env.mjs'
-  ],
-
-  // Whether test files are exempted from raw process.env check
-  rawEnvTestExemption: true,
-
-  // Patterns to identify test files
-  testFilePatterns: [
-    '/__tests__/',
-    /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/
-  ],
-
-  // Directories ignored during recursive scanning
-  excludedDirectories: [
-    'node_modules',
-    '.git',
-    '.next',
-    'dist',
-    'coverage'
-  ]
-};
-
-/**
- * Load policy configuration from architecture-fitness.config.{mjs,js,json} if present.
- */
-async function loadConfig() {
-  const configFiles = [
-    'architecture-fitness.config.mjs',
-    'architecture-fitness.config.js',
-    'architecture-fitness.config.json'
-  ];
-
-  for (const filename of configFiles) {
-    const fullPath = path.join(ROOT_DIR, filename);
-    if (fs.existsSync(fullPath)) {
-      try {
-        if (filename.endsWith('.json')) {
-          const raw = fs.readFileSync(fullPath, 'utf-8');
-          const custom = JSON.parse(raw);
-          return { ...DEFAULT_CONFIG, ...custom, _configSource: filename };
-        } else {
-          const fileUrl = pathToFileURL(fullPath).href;
-          const imported = await import(fileUrl);
-          const custom = imported.default || imported;
-          return { ...DEFAULT_CONFIG, ...custom, _configSource: filename };
-        }
-      } catch (err) {
-        console.warn(`⚠️  [CONFIG] Failed to load custom configuration from ${filename}: ${err.message}`);
-      }
-    }
-  }
-
-  return { ...DEFAULT_CONFIG, _configSource: null };
-}
-
-const violations = [];
-const seenViolations = new Set();
-
-function addViolation(rule, file, line, detail) {
-  const key = `${rule}:${file}:${line}:${detail}`;
-  if (!seenViolations.has(key)) {
-    seenViolations.add(key);
-    violations.push({ rule, file, line, detail });
-  }
-}
 
 /**
  * Recursively collect all relevant source code files (.ts, .tsx, .js, .jsx, .mjs)
@@ -162,7 +38,7 @@ function normalizeRelativePath(filePath) {
  * Strip single-line and multi-line comments while preserving exact character offsets and newlines.
  * Handles template literals and nested template expressions (${...}) without premature closing.
  */
-function stripComments(code) {
+export function stripComments(code) {
   let result = '';
   let state = 'default';
   const templateStack = [];
@@ -278,7 +154,7 @@ function stripComments(code) {
  * - Template literal expressions `${process.env.VAR}` are properly analyzed.
  * - Multiline imports record the exact line of the module specifier.
  */
-function parseSourceFile(cleanCode) {
+export function parseSourceFile(cleanCode) {
   const imports = [];
   const rawEnvAccesses = [];
 
@@ -422,7 +298,7 @@ function getLineSnippet(rawContent, lineNum) {
  * Match module specifier against package boundaries.
  * Exact match or subpath match (e.g. 'pg' matches 'pg' and 'pg/promises', but NOT './upgrade').
  */
-function checkForbiddenModule(specifier, forbiddenList) {
+export function checkForbiddenModule(specifier, forbiddenList) {
   for (const item of forbiddenList) {
     if (item instanceof RegExp) {
       item.lastIndex = 0;
@@ -439,7 +315,7 @@ function checkForbiddenModule(specifier, forbiddenList) {
 /**
  * Determine if a file path belongs to the Domain layer based on configured patterns.
  */
-function isDomainFile(relPath, domainPatterns) {
+export function isDomainFile(relPath, domainPatterns) {
   for (const pattern of domainPatterns) {
     if (pattern instanceof RegExp) {
       pattern.lastIndex = 0;
@@ -459,7 +335,7 @@ function isDomainFile(relPath, domainPatterns) {
 /**
  * Determine if a file path is recognized as a test file based on configured test patterns.
  */
-function isTestFile(relPath, config) {
+export function isTestFile(relPath, config) {
   if (!config.rawEnvTestExemption) return false;
   for (const pattern of config.testFilePatterns) {
     if (pattern instanceof RegExp) {
@@ -472,45 +348,61 @@ function isTestFile(relPath, config) {
   return false;
 }
 
-// ====================================================
-// MAIN VALIDATOR EXECUTION
-// ====================================================
+/**
+ * Main validation engine execution.
+ */
+export async function runValidator({ rootDir = ROOT_DIR, isStrict = IS_STRICT } = {}) {
+  const violations = [];
+  const seenViolations = new Set();
 
-async function run() {
+  function addViolation(rule, file, line, detail) {
+    const key = `${rule}:${file}:${line}:${detail}`;
+    if (!seenViolations.has(key)) {
+      seenViolations.add(key);
+      violations.push({ rule, file, line, detail });
+    }
+  }
+
   console.log('====================================================');
   console.log('🔍 [FITNESS] Running Architecture Boundary Validator');
   console.log('====================================================');
 
-  const config = await loadConfig();
+  const config = await loadConfig(rootDir);
   if (config._configSource) {
     console.log(`⚙️  [POLICY] Loaded custom policy from ${config._configSource}`);
   } else {
     console.log('ℹ️  [POLICY] Using default reference policy (zero-config mode)');
   }
 
-  // Collect source files from all configured sourceRoots
-  let allFiles = [];
-  let existingRoots = [];
+  // Collect source files from all configured sourceRoots with deduplication
+  const allFileSet = new Set();
+  const existingRoots = [];
 
   for (const root of config.sourceRoots) {
-    const rootDir = path.join(ROOT_DIR, root);
-    if (fs.existsSync(rootDir)) {
+    const rootDirResolved = path.join(rootDir, root);
+    if (fs.existsSync(rootDirResolved)) {
       existingRoots.push(root);
-      allFiles = allFiles.concat(collectFiles(rootDir, config.excludedDirectories));
+      const files = collectFiles(rootDirResolved, config.excludedDirectories);
+      for (const f of files) {
+        allFileSet.add(path.resolve(f));
+      }
     }
   }
 
   if (existingRoots.length === 0) {
-    if (IS_STRICT) {
+    if (isStrict) {
       console.error(`❌ [FAIL] Strict mode: none of the configured source roots exist (${config.sourceRoots.join(', ')}).`);
       process.exit(1);
     }
     console.log(`ℹ️  No configured source roots detected (${config.sourceRoots.join(', ')}). Architecture boundaries intact.`);
     console.log('✅ [PASS] 0 violations found across 0 files.');
-    process.exit(0);
+    return { violations: [], exitCode: 0 };
   }
 
-  if (IS_STRICT && allFiles.length === 0) {
+  // Deterministically sorted unique file list
+  const allFiles = [...allFileSet].sort();
+
+  if (isStrict && allFiles.length === 0) {
     console.error(`❌ [FAIL] Strict mode: no supported source files found in source roots (${existingRoots.join(', ')}).`);
     process.exit(1);
   }
@@ -518,6 +410,9 @@ async function run() {
   console.log(`📁 Scanning ${allFiles.length} source file(s) across roots [${existingRoots.join(', ')}]...`);
 
   const allowedEnvSet = new Set(config.allowedEnvFiles);
+  const directivePattern = config.clientDirective
+    ? new RegExp(`^\\s*['"]${escapeRegExp(config.clientDirective)}['"]\\s*;?`)
+    : null;
 
   for (const filePath of allFiles) {
     const relPath = normalizeRelativePath(filePath);
@@ -525,8 +420,8 @@ async function run() {
     const cleanContent = stripComments(rawContent);
 
     const isDomain = isDomainFile(relPath, config.domainPatterns);
-    const isClientComponent = config.clientDirective
-      ? new RegExp(`^\\s*['"]${config.clientDirective}['"]`).test(cleanContent.replace(/^\uFEFF/, ''))
+    const isClientComponent = directivePattern
+      ? directivePattern.test(cleanContent.replace(/^\uFEFF/, ''))
       : false;
     const isEnvConfigFile = allowedEnvSet.has(relPath);
     const isTest = isTestFile(relPath, config);
@@ -595,7 +490,15 @@ async function run() {
   }
 }
 
-run().catch((err) => {
-  console.error('💥 Fatal error in architecture validator:', err);
-  process.exit(1);
-});
+function isMainModule() {
+  const entryPath = process.argv[1];
+  if (!entryPath) return false;
+  return import.meta.url === pathToFileURL(path.resolve(entryPath)).href;
+}
+
+if (isMainModule()) {
+  runValidator().catch((err) => {
+    console.error('💥 Fatal error in architecture validator:', err.message);
+    process.exit(1);
+  });
+}
