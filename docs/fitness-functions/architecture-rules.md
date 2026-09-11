@@ -6,7 +6,13 @@ Hệ thống ranh giới kiến trúc được chia làm 2 nhóm rõ rệt: **Ma
 
 ## PHẦN 1: MACHINE-ENFORCED RULES (MÁY CHẤM TỰ ĐỘNG)
 
-Các quy tắc này được kiểm tra tự động qua lệnh `npm run test:fitness`. Bất kỳ vi phạm nào cũng khiến quá trình build và CI thất bại với Exit code 1.
+Các quy tắc này được kiểm tra tự động qua lệnh `npm run test:fitness` bằng công cụ quét tĩnh kiến trúc (`scripts/validators/architecture-fitness.mjs`). Bất kỳ vi phạm nào cũng khiến quá trình build và CI thất bại với Exit code 1.
+
+> [!NOTE]
+> **Cơ Chế vs Chính Sách (Engine vs Policy)**:
+> - **Scanner Engine** (`scripts/validators/architecture-fitness.mjs`): Bộ phân tích cú pháp tĩnh dùng chung, hoàn toàn độc lập với tech stack (thu thập file, bóc tách comment, mask chuỗi thường, giữ template expression `${...}`, báo đúng dòng module specifier).
+> - **Reference Policy** (`scripts/validators/architecture-fitness-policy.mjs`): Chính sách tham chiếu mặc định cho dự án Node.js/TypeScript theo layout `src/`.
+> - **Custom Policy (`architecture-fitness.config.mjs`)**: Các dự án có cấu trúc khác biệt (Monorepo `apps/` + `packages/`, Modular Monolith `src/modules/*/domain/`, Backend thuần túy không dùng `'use client'`, v.v.) có thể tạo file cấu hình chuẩn hóa `architecture-fitness.config.mjs` ở thư mục gốc để ghi đè `sourceRoots`, `domainPatterns`, `clientDirective`, `forbiddenDomainModules`, và `allowedEnvFiles`. Custom array sẽ thay thế tương ứng cho default array.
 
 <a id="rule-domain-purity"></a>
 ### Luật 1: Domain Is Pure (Tầng Nghiệp Vụ Thuần Khiết Tuyệt Đối)

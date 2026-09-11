@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node scripts/validators/architecture-fitness.test.mjs",
     "test:fitness": "node scripts/validators/architecture-fitness.mjs"
   }
 }
