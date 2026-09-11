@@ -61,13 +61,17 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
   - `task/<ten-task>`: Task theo yêu cầu tổng hợp.
   - `feat/<ten-tinh-nang>`: Tính năng mới.
   - `fix/<ten-loi>`: Sửa lỗi / bugfix.
+  - `hotfix/<incident-code>`: Bản vá khẩn cấp cho sự cố production đã được xác nhận.
 - **Tự động chuyển branch an toàn**: Trước khi code, kiểm tra `git branch --show-current`. Nếu đang ở `main`/`master`, tự động tạo và checkout branch mới theo format trên.
-- **Cam Kết Có Điều Kiện (Conditional Commit)**: AI **chỉ được phép commit** khi thỏa mãn **TOÀN BỘ 5 điều kiện**:
-  1. Working tree sạch sẽ, không chứa file rác, file `.env` hay credentials nhầm lẫn.
-  2. Toàn bộ automated tests đều PASS (`npm test` nếu có test runner).
-  3. Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
-  4. Không còn giả định mở (open assumptions) hay xung đột chưa giải quyết.
-  5. Đang ở trên task branch hợp lệ (tuyệt đối không phải `main`/`master`).
+- **Bảo toàn Baseline Repository**: Nếu working tree đã có các thay đổi từ trước khi bắt đầu task, AI không được tự ý sửa, stash, reset hoặc commit các thay đổi đó. Phải ghi nhận baseline và bảo đảm không pha trộn chúng vào commit của task.
+- **Cam Kết Có Điều Kiện (Conditional Commit)**: AI **chỉ được phép commit** khi thỏa mãn **TOÀN BỘ** các điều kiện sau:
+  1. **Pre-commit working tree**: Working tree chỉ chứa các thay đổi thuộc phạm vi task; không chứa file rác, file `.env`, credentials hoặc thay đổi ngoài scope.
+  2. **Automated tests pass**: Toàn bộ automated tests liên quan đều PASS (`npm test` nếu có test runner).
+  3. **Architecture fitness pass**: Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
+  4. **No open assumptions**: Không còn giả định mở (open assumptions) hay xung đột chưa giải quyết.
+  5. **Valid task branch**: Đang ở trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), tuyệt đối không phải `main`/`master`.
+  6. **Post-commit clean tree**: Sau khi commit, `git status --short` phải không còn thay đổi chưa được xử lý thuộc phạm vi task.
+- **Phạm vi áp dụng Commit**: Chỉ thực hiện commit nếu task tạo ra thay đổi cần lưu trữ vào repository. Các task read-only hoặc investigation thuần túy không tạo commit.
 - **Giới hạn Git**: AI được phép tạo branch và commit cục bộ; **tuyệt đối không tự ý push, rebase, stash, reset hoặc xóa branch** trừ khi Developer yêu cầu đích danh.
 
 ### D. Quy Chuẩn Trình Bày & Đường Dẫn
@@ -93,7 +97,7 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
   - Chỉnh sửa CSS thuần túy không thay đổi cấu trúc DOM / layout tree.
   - Viết bổ sung Unit test thuần túy không sửa logic runtime.
   - Task read-only: Giải thích kiến trúc, trace code, review logic.
-- **Chu trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Conditional Commit`.
+- **Chu trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi mã nguồn)`.
 - **RÀO CHẮN DỪNG KHẨN CẤP (FAST TRACK HARD STOP)**:
   > [!CAUTION]
   > Fast Track **lập tức vô hiệu lực** nếu phát sinh bất kỳ yếu tố nào sau đây (bắt buộc quay lại Quy trình Chuẩn 3 bước):
@@ -101,7 +105,7 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
   > 2. Đụng chạm Schema Database, migrations, hoặc dữ liệu seed.
   > 3. Thay đổi logic Authentication hoặc Authorization.
   > 4. Thay đổi logic nghiệp vụ (Business logic runtime).
-  > 5. Chạm vào bất kỳ thành phần nào thuộc luồng **P0** hoặc **P1**.
+  > 5. Chạm vào bất kỳ thành phần nào thuộc luồng **P0** hoặc **P1** (dựa trên blast radius).
 
 ---
 
@@ -113,49 +117,74 @@ AI Agent bắt buộc **DỪNG LẠI NGAY LẬP TỨC**, không tự ý đoán h
 3. **Migration Uncertainty**: Kịch bản migration dữ liệu chưa rõ tính tương thích ngược hoặc nguy cơ schema drift.
 4. **Security / Privacy Exposure**: Phát hiện lỗ hổng bảo mật, leak secrets hoặc vi phạm Server Trust Boundary.
 5. **Breaking API Changes**: Sửa đổi làm gãy contracts đang phục vụ client khác.
-6. **Irreversible Operations**: Thao tác xóa cột, drop table, purge cache diện rộng không thể rollback tức thì.
+6. **Irreversible Operations**: Thao tác xóa cột, drop table, purge cache diện rộng không thể rollback an toàn tức thì.
 7. **Architectural Trade-offs**: Phân vân kỹ thuật nền tảng (Queue vs Cron, Redis vs DB, Event-Driven vs Sync, chia module mới). Bắt buộc dừng lại, phân tích trade-offs và yêu cầu tạo ADR theo [docs/decisions/README.md](docs/decisions/README.md).
 
 ---
 
 ## 5. Tiêu Chuẩn Hoàn Tất (Definition of Done - DoD)
 
-Một task chỉ được coi là hoàn tất (`status: completed`) khi thỏa mãn toàn bộ 7 tiêu chí:
+Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp ứng **DoD profile tương ứng**:
+
+### A. Standard DoD (Áp dụng cho Standard 3-Step Path)
 1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) đã được Developer duyệt (`status: approved`).
 2. **Spec Synchronized**: Đặc tả nghiệp vụ (`docs/main_docs/<ACTIVE_VERSION>/fn/`) đã được cập nhật đồng bộ nếu có thay đổi hành vi (`Spec Impact: CHANGE/CLARIFICATION`).
 3. **Automated Tests Pass**: Mọi test suites liên quan đều PASS (nếu dự án có cấu hình test runner).
 4. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` thực thi thành công với Exit code 0.
 5. **No Open Assumptions**: Toàn bộ giả định mở hoặc xung đột kiến trúc/nghiệp vụ đã được giải quyết triệt để.
 6. **Documentation & Memory Updated**: Đã cập nhật ADR (nếu chạm trigger), pitfalls/lessons (nếu phát hiện bẫy mới).
-7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ, không sót file nhạy cảm hay file rác.
+7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), không sót file nhạy cảm hay file rác.
+
+### B. Fast Track DoD (Áp dụng cho Fast Track Changes)
+1. **Scope Validity**: Phạm vi thay đổi vẫn nằm trọn vẹn trong các trường hợp cho phép của Fast Track.
+2. **No Hard Stop**: Không phát sinh bất kỳ điều kiện nào thuộc Fast Track Hard Stop.
+3. **Minimal Surgical Diff**: Diff chỉ chứa thay đổi tối thiểu cần thiết cho task.
+4. **Verification Pass**: Các kiểm tra phù hợp với loại thay đổi đã PASS (format, lint, unit tests liên quan).
+5. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` PASS với Exit code 0 nếu script tồn tại và thay đổi có khả năng chạm vào source code hoặc ranh giới kiến trúc.
+6. **No Open Assumptions**: Không còn giả định mở hoặc xung đột chưa được giải quyết.
+7. **Conditional Commit**: Commit cục bộ trên task branch hợp lệ nếu task tạo ra thay đổi cần lưu trữ vào kho mã nguồn.
+
+### C. Phân Định Kết Quả Theo Vòng Đời Task (Lifecycle Outputs)
+- **Investigation Session**: Hoàn tất khi tài liệu phân tích `task-N-fix.md` hoặc `task-N-feat.md` được tạo với `status: draft`. Không yêu cầu commit code.
+- **Execution Task**: Hoàn tất khi đáp ứng Standard DoD (hoặc Fast Track DoD tương ứng).
+- **Read-only Task**: Hoàn tất khi báo cáo, phân tích và bằng chứng xác minh đã được cung cấp (không tạo commit code).
 
 ---
 
-## 6. Ranh Giới Kiến Trúc & Máy Chấm Tự Động (Architectural Invariants)
+## 6. Ranh Giới Kiến Trúc & Phân Định Kiểm Định (Architectural Invariants)
 
-Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy định tại [docs/fitness-functions/architecture-rules.md](docs/fitness-functions/architecture-rules.md) và được kiểm tra tự động qua `npm run test:fitness`:
+Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy định tại [docs/fitness-functions/architecture-rules.md](docs/fitness-functions/architecture-rules.md), bao gồm hai nhóm cơ chế kiểm tra:
 
+### A. Machine-Enforced Invariants (Máy Chấm Tự Động Qua `npm run test:fitness`)
 1. **Domain Purity (`src/domain/`)**: Logic nghiệp vụ thuần khiết, cấm import DB, ORMs, Web frameworks, Network clients, UI components.
-2. **Stateless Services & Repositories**: Service singletons cấm lưu `userId` hay request context trong biến instance (`this.*`).
-3. **Client/Server Isolation (`'use client'`)**: Client components cấm import DB client, server secrets, server-only helpers.
+2. **Client/Server Isolation (`'use client'`)**: Client components cấm import DB client, server secrets, server-only helpers.
+3. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`).
+
+### B. Review-Enforced Invariants (Kiểm Định Qua Investigation, Review & Preflight)
 4. **Server Trust Boundary**: Mọi query DB phải scope theo `userId` từ session đã xác thực ở server; cấm tin cậy client params.
-5. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`).
-6. **Expand-and-Contract Migrations**: Không bao giờ đổi tên hoặc drop cột cùng lúc; tuân thủ chu trình Expand -> Backfill -> Contract.
-7. **Performance Guardrails**: Cấm unbounded query, cấm `SELECT *`, bắt buộc phân trang, chống N+1 (xem [docs/standards/performance.md](docs/standards/performance.md)).
+5. **Stateless Services & Repositories**: Service singletons cấm lưu `userId` hay request context trong biến instance (`this.*`).
+6. **Expand-and-Contract Migrations**: Không bao giờ đổi tên hoặc drop cột cùng lúc; tuân thủ chu trình Expand -> Backfill -> Read Transition -> Contract.
+7. **Performance Guardrails**: Cấm query danh sách không giới hạn (unbounded query), chỉ query cột cần thiết trên hot path, bắt buộc phân trang, chống N+1 (xem [docs/standards/performance.md](docs/standards/performance.md)).
+8. **Idempotent Master Seeds**: Dữ liệu hạt giống phải có canonical identity key và upsert lũy đẳng.
 
 ---
 
 ## 7. Phân Cấp Luồng Trọng Yếu & Độ Nhạy Rủi Ro (Critical Flows P0 - P4)
 
-| Mức Độ | Tên Luồng | Ví Dụ Điển Hình | Tác Động Khi Lỗi | Auto Risk & Ràng Buộc |
+| Mức Độ | Tên Luồng | Phạm Vi Điển Hình | Tác Động Khi Lỗi | Auto Risk & Ràng Buộc |
 | :--- | :--- | :--- | :--- | :--- |
-| **P0** | **System Survival** | Auth, Session, Core Loop, Payment Gateways | Hệ thống tê liệt hoàn toàn | **CRITICAL** (Cấm Fast Track, full regression test) |
-| **P1** | **Revenue & Integrity** | Giao dịch, Đồng bộ CSDL, Master Seeding | Mất doanh thu, sai lệch DB vĩnh viễn | **HIGH** (Cấm Fast Track, integration test bắt buộc) |
-| **P2** | **Core Business** | Các luồng nghiệp vụ chính của người dùng | Tính năng chính bị gián đoạn | **MEDIUM** (Unit + Integration test) |
-| **P3** | **Convenience** | Tìm kiếm nâng cao, Bộ lọc phụ, Xuất file | Giảm tính tiện dụng, có giải pháp thay thế | **LOW** (Unit test chuẩn) |
+| **P0** | **System Survival** | Xác thực, session context, core execution loop, tính sẵn sàng & an toàn cổng thanh toán (Payment availability, webhook authenticity, unauthorized charge prevention) | Hệ thống tê liệt hoàn toàn hoặc mất kiểm soát bảo mật | **CRITICAL** (Cấm Fast Track, full regression test) |
+| **P1** | **Revenue & Integrity** | Toàn vẹn giao dịch thanh toán (Charging, renewal, refund, ledger updates, reconciliation, idempotency), đồng bộ CSDL, master data seeding | Mất doanh thu, sai lệch DB vĩnh viễn | **HIGH** (Cấm Fast Track, integration test bắt buộc) |
+| **P2** | **Core Business** | Luồng bài học, tiến trình luyện tập chính, quản lý tài nguyên nghiệp vụ chính | Tính năng chính bị gián đoạn nhưng hệ thống còn hoạt động | **MEDIUM** (Unit + Integration test) |
+| **P3** | **Convenience** | Tìm kiếm nâng cao, bộ lọc phụ, xuất file CSV/PDF, push notification | Giảm tính tiện dụng, có giải pháp thay thế | **LOW** (Unit test chuẩn) |
 | **P4** | **Nice to Have** | UI polish, CSS, typo, micro-copy | Thẩm mỹ, không đổi hành vi | **TRIVIAL** (Được dùng Fast Track) |
 
-*Luật nâng rủi ro tự động:* Task chạm vào bất kỳ file/logic nào thuộc **P0 / P1** tự động có `risk_level: HIGH` hoặc `CRITICAL`, bắt buộc tuân thủ Standard 3-step Path.
+> [!IMPORTANT]
+> **Nguyên tắc ưu tiên mức rủi ro cao nhất (Tie-Breaking Rule):**  
+> Nếu một luồng, tính năng hoặc tác vụ đồng thời chạm vào nhiều cấp độ, bắt buộc áp dụng cấp độ rủi ro cao nhất (**P0 > P1 > P2 > P3 > P4**).
+
+*Luật nâng rủi ro theo tác động (Impact-Based Risk Escalation):*  
+Rủi ro được phân loại theo hành vi và bán kính tác động (blast radius), không chỉ theo vị trí file. Một task được tự động nâng lên `risk_level: HIGH` hoặc `CRITICAL` nếu thay đổi có thể ảnh hưởng trực tiếp hoặc gián tiếp đến invariant, contract hoặc runtime execution của luồng **P0 / P1**, bắt buộc tuân thủ Standard 3-Step Path.
 
 ---
 

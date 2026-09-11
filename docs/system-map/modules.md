@@ -27,7 +27,7 @@ Hệ thống tuân thủ kiến trúc phân tầng phân ly trách nhiệm rõ r
 ## 1. Domain Layer (`src/domain/`)
 - **Trách nhiệm**: Chứa các quy tắc nghiệp vụ cốt lõi, công thức tính toán, entities, value objects và domain interfaces/ports.
 - **Ranh giới cốt lõi**: Hoàn toàn thuần khiết (Pure). Cấm import database, web frameworks, UI components hoặc `process.env`.
-- *Chi tiết*: [architecture-rules.md#luat-1-domain-is-pure](../fitness-functions/architecture-rules.md#luat-1-domain-is-pure)
+- *Chi tiết*: [architecture-rules.md](../fitness-functions/architecture-rules.md#rule-domain-purity)
 
 ## 2. Service Layer (`src/services/` hoặc `src/application/`)
 - **Trách nhiệm**: Điều phối luồng nghiệp vụ (use cases), kết hợp Domain logic với Infrastructure adapters.
@@ -39,4 +39,4 @@ Hệ thống tuân thủ kiến trúc phân tầng phân ly trách nhiệm rõ r
 
 ## 4. Presentation Layer (`src/app/`, `src/components/`, `src/ui/`)
 - **Trách nhiệm**: Render giao diện, tiếp nhận HTTP requests/events, validate input thô.
-- **Quy tắc**: Phân tách rành mạch Client Components (`'use client'`) và Server Components. Client component cấm import DB client hoặc secrets (xem [architecture-rules.md#luat-2](../fitness-functions/architecture-rules.md#luat-2-clientserver-isolation-cach-ly-khach--chu-tuyet-doi)).
+- **Quy tắc**: Phân tách rành mạch Client Components (`'use client'`) và Server Components. Client component cấm import DB client hoặc secrets (xem [architecture-rules.md](../fitness-functions/architecture-rules.md#rule-client-isolation)).

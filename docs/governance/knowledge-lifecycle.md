@@ -34,7 +34,7 @@ Tài liệu này định nghĩa chu kỳ lưu trữ (retention) và lưu trữ l
 2. Khi kiến trúc thay đổi, tạo ADR mới (ví dụ: `ADR-0012-drizzle-migration.md`).
 3. Cập nhật header của ADR cũ:
    ```markdown
-   - **Trạng thái**: Superseded by [ADR-0012](../decisions/ADR-0012-drizzle-migration.md)
+   - **Trạng thái**: Superseded by ADR-0012 (ADR-0012-drizzle-migration.md)
    ```
 
 ---

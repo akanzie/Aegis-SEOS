@@ -56,12 +56,15 @@ Khi có một tính năng mới hoặc một danh sách lỗi cần sửa, bạn
 - Sửa lỗi chính tả (typo), cập nhật markdown, viết comment, format code.
 - Chỉnh sửa CSS thuần túy không đổi cấu trúc layout/DOM.
 - Viết bổ sung Unit test thuần túy không sửa logic runtime.
-- **Quy trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Commit ngay`.
+- Task read-only: Giải thích kiến trúc, trace code, review logic.
+- **Quy trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi mã nguồn/tài liệu)`.
 
-#### B. Quy Tắc Vàng Về Git:
+#### B. Quy Tắc Vàng Về Git & Cam Kết Có Điều Kiện:
 - **Tuyệt đối KHÔNG commit trực tiếp lên `main` / `master`**.
-- Luôn làm việc trên branch riêng theo task: `task/<ten-task>`, `feat/<ten-feature>`, `fix/<ten-bug>`.
-- AI chỉ commit khi toàn bộ test và fitness functions đều PASS (Exit code 0).
+- Luôn làm việc trên branch riêng theo task: `task/<ten-task>`, `feat/<ten-feature>`, `fix/<ten-bug>`, hoặc `hotfix/<incident-code>`.
+- **Bảo toàn Baseline**: Không tự ý sửa, stash, reset hoặc commit các thay đổi có sẵn từ trước trong working tree.
+- AI chỉ commit khi working tree chỉ chứa các thay đổi thuộc phạm vi task, toàn bộ test và fitness functions đều PASS (Exit code 0).
+- Task read-only và investigation thuần túy không bắt buộc tạo commit.
 
 ---
 
@@ -135,21 +138,23 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
 
 #### A. `AGENTS.md` (Root Contract)
 - Định nghĩa rõ thứ tự ưu tiên giải quyết mâu thuẫn: `An Toàn > Dev Override > Approved Task > Functional Specs > Architecture > Code Style`.
-- Khai báo quy chuẩn Git an toàn: Cấm commit lên `main`, tự tạo branch theo task, cấm tự ý `push`/`reset --hard`.
+- Khai báo quy chuẩn Git an toàn: Cấm commit lên `main`, tự tạo branch theo task (`task/*`, `feat/*`, `fix/*`, `hotfix/*`), bảo toàn baseline, cấm tự ý `push`/`reset --hard`.
 - Khai báo Token Budget: Low (<= 10k), Medium (<= 30k), High (<= 60k), Critical (Cần duyệt).
-- Khai báo 2 luồng: Fast Track và Standard 3-Step Path.
+- Khai báo 2 luồng: Fast Track (Fast Track DoD) và Standard 3-Step Path (Standard DoD).
 
-#### B. `docs/operations/quick-checklist.md` (10 Điều Bất Biến)
-1. **Domain Pure**: Tầng domain cấm import DB, framework, network, UI.
-2. **Server Trust Boundary**: Mọi query DB phải lọc theo `userId` từ session đã xác thực.
-3. **Stateless Services**: Service singleton cấm lưu state người dùng trong biến `this`.
-4. **Client/Server Isolation**: Client components cấm import server-only modules hoặc DB client.
-5. **No Raw Env**: Cấm đọc `process.env` rải rác ngoài module schema validate tập trung (`src/lib/env.ts`).
-6. **Master Data Identity**: Mọi dữ liệu hạt giống (seed) phải có canonical identity key và upsert lũy đẳng.
-7. **Expand-and-Contract**: Không bao giờ đổi tên hoặc xóa cột DB trong cùng 1 lần release.
-8. **Critical Flows Sensitivity**: Thay đổi chạm vào flow P0/P1 tự động nâng Risk >= HIGH.
-9. **Fast Track Boundary**: Chỉ áp dụng cho typo, markdown, comments, formatting, CSS thuần, test thuần.
-10. **Machine-Verified Fitness**: Bắt buộc chạy `npm run test:fitness` pass trước khi kết thúc task.
+#### B. `docs/operations/quick-checklist.md` (10 Điều Bất Biến & Split DoD)
+- **Machine-Enforced (npm run test:fitness)**:
+  1. **Domain Pure**: Tầng domain cấm import DB, framework, network, UI.
+  2. **Client/Server Isolation**: Client components cấm import server-only modules hoặc DB client.
+  3. **No Raw Env**: Cấm đọc `process.env` rải rác ngoài module schema validate tập trung (`src/lib/env.ts`).
+- **Review-Enforced (Investigation & Preflight)**:
+  4. **Server Trust Boundary**: Mọi query DB phải lọc theo `userId` từ session đã xác thực.
+  5. **Stateless Services**: Service singleton cấm lưu state người dùng trong biến `this`.
+  6. **Master Data Identity**: Mọi dữ liệu hạt giống (seed) phải có canonical identity key và upsert lũy đẳng.
+  7. **Expand-and-Contract**: Không bao giờ đổi tên hoặc xóa cột DB trong cùng 1 lần release.
+  8. **Critical Flows Sensitivity**: Thay đổi có blast radius chạm vào flow P0/P1 tự động nâng Risk >= HIGH.
+  9. **Performance & Observability Guardrails**: Cấm unbounded list query, phòng chống N+1, correlation ID và structured logs.
+  10. **Machine-Verified Fitness Pass**: Bắt buộc chạy `npm run test:fitness` pass với Exit code 0 trước khi commit.
 
 #### C. `scripts/validators/architecture-fitness.mjs` (Máy Chấm Ranh Giới)
 - Viết 1 script Node.js quét AST hoặc regex import:
@@ -181,12 +186,13 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
   - **ADRs (`docs/decisions/**`)**: Khi bị thay thế bởi quyết định mới -> đổi trạng thái sang `Superseded` và liên kết sang ADR mới.
 
 #### G. Chuẩn Hóa Phân Cấp Luồng Trọng Yếu (Critical Flows P0 - P4)
-- **P0 - System Survival**: Luồng sống còn (Auth, Session, Core Loop, Payment Gateways). Lỗi = Blocker.
-- **P1 - Revenue & Integrity**: Ảnh hưởng doanh thu hoặc mất tính toàn vẹn dữ liệu.
+- **P0 - System Survival**: Luồng sống còn (Auth, Session, Core Loop, Payment availability & security boundary). Lỗi = Blocker.
+- **P1 - Revenue & Integrity**: Toàn vẹn giao dịch thanh toán (charging, renewal, refund, ledger), đồng bộ CSDL, master data seeding.
 - **P2 - Core Business**: Các use case nghiệp vụ chính của người dùng.
 - **P3 - Convenience**: Các tính năng hỗ trợ, tiện ích bổ sung.
 - **P4 - Nice to Have**: Chỉnh chu UI/UX, micro-interactions, copy text.
-- *Quy tắc độ nhạy*: Bất kỳ task nào chạm vào luồng **P0 / P1** tự động nâng mức rủi ro lên `>= HIGH` và bắt buộc chạy full regression test.
+- *Nguyên tắc ưu tiên rủi ro cao nhất*: Luồng chạm nhiều cấp độ thì áp dụng cấp cao nhất (P0 > P1 > P2 > P3 > P4).
+- *Quy tắc độ nhạy theo tác động (Blast Radius)*: Bất kỳ task nào có khả năng ảnh hưởng trực tiếp/gián tiếp đến invariant/contract của luồng **P0 / P1** tự động nâng mức rủi ro lên `>= HIGH` và bắt buộc chạy full regression test.
 
 ---
 
