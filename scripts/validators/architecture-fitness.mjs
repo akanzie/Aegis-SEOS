@@ -69,22 +69,30 @@ function stripComments(code) {
         state = 'single_comment';
         result += '  ';
         i += 2;
+        continue;
       } else if (char === '/' && next === '*') {
         state = 'multi_comment';
         result += '  ';
         i += 2;
-      } else if (char === "'") {
-        state = 'string_single';
-        result += char;
+        continue;
+      } else if (char === "'" || char === '"' || char === '`') {
+        const quote = char;
+        result += quote;
         i++;
-      } else if (char === '"') {
-        state = 'string_double';
-        result += char;
-        i++;
-      } else if (char === '`') {
-        state = 'string_template';
-        result += char;
-        i++;
+        while (i < n) {
+          const c = code[i];
+          if (c === '\\' && i + 1 < n) {
+            result += c + code[i + 1];
+            i += 2;
+          } else if (c === quote) {
+            result += quote;
+            i++;
+            break;
+          } else {
+            result += c;
+            i++;
+          }
+        }
       } else {
         result += char;
         i++;
@@ -105,73 +113,148 @@ function stripComments(code) {
         continue;
       } else if (char === '\n' || char === '\r') {
         result += char;
+        i++;
       } else {
         result += ' ';
+        i++;
       }
-      i++;
-    } else if (state === 'string_single') {
-      result += char;
-      if (char === '\\' && i + 1 < n) {
-        result += code[i + 1];
-        i += 2;
-        continue;
-      } else if (char === "'") {
-        state = 'default';
-      }
-      i++;
-    } else if (state === 'string_double') {
-      result += char;
-      if (char === '\\' && i + 1 < n) {
-        result += code[i + 1];
-        i += 2;
-        continue;
-      } else if (char === '"') {
-        state = 'default';
-      }
-      i++;
-    } else if (state === 'string_template') {
-      result += char;
-      if (char === '\\' && i + 1 < n) {
-        result += code[i + 1];
-        i += 2;
-        continue;
-      } else if (char === '`') {
-        state = 'default';
-      }
-      i++;
     }
   }
   return result;
 }
 
 /**
- * Extract all imported, re-exported, and required module specifiers with exact character offset.
+ * Parse code to extract valid module imports and raw process.env accesses.
+ * Distinguishes executable code from strings and template literals:
+ * - String literals like 'process.env.VAR' or "import('@prisma/client')" are ignored.
+ * - Template literal expressions `${process.env.VAR}` are properly analyzed.
+ * - Multiline imports record the exact line of the module specifier.
  */
-function extractImportSpecifiers(cleanCode) {
+function parseSourceFile(cleanCode) {
   const imports = [];
+  const rawEnvAccesses = [];
 
-  // Static ES import and export ... from '...' (supports multiline and type imports)
-  const importExportRegex = /\b(?:import|export)\b(?:(?![\n;]\s*(?:import|export|class|function|const|let|var)\b)[\s\S])*?(?:\bfrom\s*|\bimport\s+)['"]([^'"]+)['"]/g;
-  let match;
-  while ((match = importExportRegex.exec(cleanCode)) !== null) {
-    imports.push({
-      specifier: match[1],
-      index: match.index,
-      rawMatch: match[0].trim().replace(/\s+/g, ' ')
-    });
+  let state = 'default';
+  const templateStack = [];
+  let i = 0;
+  const n = cleanCode.length;
+
+  function getPrecedingContext(quoteIndex) {
+    let p = quoteIndex - 1;
+    while (p >= 0 && /\s/.test(cleanCode[p])) {
+      p--;
+    }
+    const end = p + 1;
+    const start = Math.max(0, end - 30);
+    return cleanCode.substring(start, end);
   }
 
-  // Dynamic import('...') and require('...')
-  const callRegex = /\b(?:import|require)\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-  while ((match = callRegex.exec(cleanCode)) !== null) {
-    imports.push({
-      specifier: match[1],
-      index: match.index,
-      rawMatch: match[0].trim()
-    });
+  function checkImportContext(quoteIndex) {
+    const prev = getPrecedingContext(quoteIndex);
+    if (/\bfrom$/.test(prev)) return 'from';
+    if (/\bimport$/.test(prev)) return 'side_effect_import';
+    if (/\bimport\s*\($/.test(prev)) return 'dynamic_import';
+    if (/\brequire\s*\($/.test(prev)) return 'require';
+    return null;
   }
 
-  return imports;
+  let tokenBuffer = '';
+  let tokenStartIndex = 0;
+
+  function flushToken() {
+    if (tokenBuffer === 'process') {
+      const slice = cleanCode.substring(tokenStartIndex, tokenStartIndex + 30);
+      const match = /^process\s*\.\s*env\b/.exec(slice);
+      if (match) {
+        rawEnvAccesses.push({
+          index: tokenStartIndex,
+          raw: match[0]
+        });
+      }
+    }
+    tokenBuffer = '';
+  }
+
+  while (i < n) {
+    const char = cleanCode[i];
+    const next = i + 1 < n ? cleanCode[i + 1] : '';
+
+    if (state === 'default') {
+      if (char === "'" || char === '"') {
+        flushToken();
+        const importType = checkImportContext(i);
+        const quote = char;
+        const specifierStart = i + 1;
+        let content = '';
+        i++; // skip open quote
+
+        while (i < n && cleanCode[i] !== quote) {
+          if (cleanCode[i] === '\\' && i + 1 < n) {
+            content += cleanCode[i + 1];
+            i += 2;
+          } else {
+            content += cleanCode[i];
+            i++;
+          }
+        }
+        if (i < n) i++; // skip close quote
+
+        if (importType) {
+          imports.push({
+            specifier: content,
+            type: importType,
+            index: specifierStart
+          });
+        }
+        continue;
+      } else if (char === '`') {
+        flushToken();
+        state = 'string_template';
+        templateStack.push(0);
+        i++;
+      } else if (char === '{' && templateStack.length > 0) {
+        flushToken();
+        templateStack[templateStack.length - 1]++;
+        i++;
+      } else if (char === '}' && templateStack.length > 0) {
+        flushToken();
+        const currentDepth = templateStack[templateStack.length - 1];
+        if (currentDepth === 1) {
+          templateStack[templateStack.length - 1] = 0;
+          state = 'string_template';
+        } else if (currentDepth > 1) {
+          templateStack[templateStack.length - 1]--;
+        }
+        i++;
+      } else if (/[a-zA-Z0-9_$]/.test(char)) {
+        if (tokenBuffer === '') tokenStartIndex = i;
+        tokenBuffer += char;
+        i++;
+      } else {
+        flushToken();
+        i++;
+      }
+    } else if (state === 'string_template') {
+      if (char === '\\' && i + 1 < n) {
+        i += 2;
+        continue;
+      } else if (char === '`') {
+        templateStack.pop();
+        state = 'default';
+        i++;
+      } else if (char === '$' && next === '{') {
+        templateStack[templateStack.length - 1] = 1;
+        state = 'default';
+        i += 2;
+        continue;
+      } else {
+        i++;
+      }
+    }
+  }
+
+  flushToken();
+  return { imports, rawEnvAccesses };
 }
 
 function getLineNumber(content, index) {
@@ -215,6 +298,12 @@ if (!fs.existsSync(SRC_DIR)) {
 }
 
 const allFiles = collectFiles(SRC_DIR);
+
+if (IS_STRICT && allFiles.length === 0) {
+  console.error('❌ [FAIL] Strict mode: no supported source files found in src/.');
+  process.exit(1);
+}
+
 console.log(`📁 Scanning ${allFiles.length} source file(s) in src/...`);
 
 // Rule 1: Domain Purity Forbidden Modules
@@ -271,9 +360,10 @@ for (const filePath of allFiles) {
   const isEnvConfigFile = ALLOWED_ENV_CONFIG_FILES.has(relPath);
   const isTestFile = relPath.includes('__tests__') || /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(relPath);
 
+  const { imports, rawEnvAccesses } = parseSourceFile(cleanContent);
+
   // Check Rule 1 & Rule 2: Module Imports
   if (isDomain || isClientComponent) {
-    const imports = extractImportSpecifiers(cleanContent);
     for (const imp of imports) {
       const lineNum = getLineNumber(cleanContent, imp.index);
       const snippet = getLineSnippet(rawContent, lineNum);
@@ -306,10 +396,8 @@ for (const filePath of allFiles) {
 
   // Check Rule 3: No Raw process.env
   if (!isEnvConfigFile && !isTestFile) {
-    const rawEnvRegex = /\bprocess\s*\.\s*env\b/g;
-    let envMatch;
-    while ((envMatch = rawEnvRegex.exec(cleanContent)) !== null) {
-      const lineNum = getLineNumber(cleanContent, envMatch.index);
+    for (const envAccess of rawEnvAccesses) {
+      const lineNum = getLineNumber(cleanContent, envAccess.index);
       const snippet = getLineSnippet(rawContent, lineNum);
       addViolation(
         'Rule 3 (No Raw process.env)',
@@ -325,7 +413,7 @@ for (const filePath of allFiles) {
 if (violations.length > 0) {
   console.error('\n❌ [FAIL] Architecture Boundary Violations Detected:');
   violations.forEach((v, i) => {
-    console.error(`  ${i + 1}. [${v.rule}] ${v.file}:${lineFormatted(v.line)}`);
+    console.error(`  ${i + 1}. [${v.rule}] ${v.file}:${v.line}`);
     console.error(`     └─ ${v.detail}`);
   });
   console.error(`\n🚨 Total violations: ${violations.length}. Please fix before committing.\n`);
@@ -334,8 +422,3 @@ if (violations.length > 0) {
   console.log('✅ [PASS] All architecture boundaries validated successfully! (0 violations)');
   process.exit(0);
 }
-
-function lineFormatted(line) {
-  return typeof line === 'number' ? `${line}` : `${line}`;
-}
-
