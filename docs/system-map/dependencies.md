@@ -1,6 +1,7 @@
 # System Map: Dependency Matrix (Ma Trận Import Cho Phép / Cấm)
 
-Ma trận này xác định chiều import hợp lệ giữa các module trong codebase:
+Ma trận này xác định chiều import hợp lệ giữa các module trong codebase.
+*Quy chuẩn kiểm tra tự động*: [docs/fitness-functions/architecture-rules.md](../fitness-functions/architecture-rules.md).
 
 | Tầng Hiện Tại (Source) | Được Import Từ (Allowed Targets) | Cấm Tuyệt Đối Import (Forbidden Targets) |
 | :--- | :--- | :--- |
@@ -14,15 +15,8 @@ Ma trận này xác định chiều import hợp lệ giữa các module trong c
 
 ## Các Ranh Giới Kiểm Tra Bằng Máy (Fitness Enforcement)
 
-1. **Rule 1 - Domain Isolation**:
-   ```
-   src/domain/** -> CANNOT import from (db, prisma, drizzle, next, express, react)
-   ```
-2. **Rule 2 - Client Safety Boundary**:
-   ```
-   files with 'use client' -> CANNOT import from (prisma, server-only, database, secret config)
-   ```
-3. **Rule 3 - Centralized Environment**:
-   ```
-   src/** (except src/lib/env.ts) -> CANNOT call `process.env.*` directly
-   ```
+1. **Rule 1 - Domain Isolation**: `src/domain/**` -> cấm import ORM, framework, react, express.
+2. **Rule 2 - Client Safety Boundary**: File có `'use client'` -> cấm import DB client, server-only secrets.
+3. **Rule 3 - Centralized Environment**: `src/**` -> cấm gọi trực tiếp `process.env.*` (ngoại trừ file schema env tập trung).
+
+*Chi tiết máy chấm*: [architecture-fitness.mjs](../../scripts/validators/architecture-fitness.mjs).

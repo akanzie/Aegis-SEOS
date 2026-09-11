@@ -19,5 +19,5 @@ Mỗi file trong `docs/context-packages/<domain>.md` tuân theo cấu trúc:
 
 ## 2. Danh Sách Context Packages Có Sẵn
 
-- [template.md](file:///c:/Users/ca_kiet/Documents/new-project-test/docs/context-packages/template.md) — Mẫu chuẩn để tạo Context Package mới.
-- [auth-context.md](file:///c:/Users/ca_kiet/Documents/new-project-test/docs/context-packages/auth-context.md) — Context Package cho phân hệ Authentication & Session.
+- [template.md](template.md) — Mẫu chuẩn để tạo Context Package mới.
+- [auth-context.md](auth-context.md) — Context Package cho phân hệ Authentication & Session.

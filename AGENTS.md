@@ -3,7 +3,7 @@
 > **Tuyên ngôn cốt lõi (Core Philosophy):**  
 > *"Tài liệu là hệ điều hành (Docs-as-an-OS), Code là kết quả phái sinh, Session AI là tiến trình độc lập và dùng một lần (Disposable Process)."*
 
-Tài liệu này là Hiến pháp Vận hành (Canonical Operating Contract) tối cao và duy nhất dành cho mọi Developer và AI Agent hoạt động trong kho mã nguồn này. Các hướng dẫn chi tiết, quy trình SOP và tài liệu kỹ thuật chuyên sâu được phân quyền tại `docs/` theo Bản đồ Tra cứu (Mục 9).
+Tài liệu này là Hiến pháp Vận hành (Canonical Operating Contract) tối cao và duy nhất dành cho mọi Developer và AI Agent hoạt động trong kho mã nguồn này. Các hướng dẫn chi tiết, quy trình SOP và tài liệu kỹ thuật chuyên sâu được phân quyền tại `docs/` theo Bản đồ Tra cứu (Mục 10).
 
 ---
 
@@ -11,7 +11,7 @@ Tài liệu này là Hiến pháp Vận hành (Canonical Operating Contract) t�
 
 Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt buộc giải quyết theo thứ tự ưu tiên giảm dần:
 
-1. **Safety, Security & Boundary Integrity**: An toàn hệ thống, bảo mật dữ liệu, quyền riêng tư, ranh giới kiến trúc (Mục 2).
+1. **Safety, Security & Boundary Integrity**: An toàn hệ thống, bảo mật dữ liệu, quyền riêng tư, ranh giới kiến trúc (Mục 2 & Mục 6).
 2. **Explicit Approved Developer Override**: Quyết định ghi đè nghiệp vụ rõ ràng của Developer trong prompt hiện tại.  
    *(Lưu ý: Tin nhắn chat thông thường chỉ ghi đè `fn` specs khi Dev tuyên bố rõ ràng đây là thay đổi nghiệp vụ; không tự ý suy diễn lời nói bóng gió để phá vỡ spec).*
 3. **Approved Task Decisions (`docs/tasks/**/task-*-fix.md`)**: Các phân tích và quyết định đã được duyệt (`status: approved`).
@@ -50,7 +50,7 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 ### A. Quản Lý Bí Mật & Dữ Liệu Nhạy Cảm (Secrets & Data Privacy)
 - **Cấm đọc/in secrets**: Tuyệt đối không đọc, ghi, in ra console/chat nội dung của `.env`, `.env.local`, `*.key`, `*.pem`, database credentials, JWT tokens.
 - **Phạm vi cho phép**: Được phép đọc `.env.example`, tên biến môi trường và module schema validation (`src/lib/env.ts` hoặc `src/config/env.ts`).
-- **Không log dữ liệu nhạy cảm**: Cấm log passwords, session tokens, cookies, auth headers hoặc PII thô.
+- **Không log dữ liệu nhạy cảm**: Cấm log passwords, session tokens, cookies, auth headers hoặc PII thô (xem [docs/standards/observability.md](docs/standards/observability.md)).
 
 ### B. Thao Tác Phá Hủy Bị Cấm
 - Cấm tự tiện chạy: `rm -rf`, `del /f /s /q`, `git reset --hard`, `git push --force`, `drop database`, format ổ đĩa hoặc các lệnh ghi đè không thể phục hồi.
@@ -64,7 +64,7 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 - **Tự động chuyển branch an toàn**: Trước khi code, kiểm tra `git branch --show-current`. Nếu đang ở `main`/`master`, tự động tạo và checkout branch mới theo format trên.
 - **Cam Kết Có Điều Kiện (Conditional Commit)**: AI **chỉ được phép commit** khi thỏa mãn **TOÀN BỘ 5 điều kiện**:
   1. Working tree sạch sẽ, không chứa file rác, file `.env` hay credentials nhầm lẫn.
-  2. Toàn bộ automated tests đều PASS (`npm test`).
+  2. Toàn bộ automated tests đều PASS (`npm test` nếu có test runner).
   3. Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
   4. Không còn giả định mở (open assumptions) hay xung đột chưa giải quyết.
   5. Đang ở trên task branch hợp lệ (tuyệt đối không phải `main`/`master`).
@@ -114,32 +114,38 @@ AI Agent bắt buộc **DỪNG LẠI NGAY LẬP TỨC**, không tự ý đoán h
 4. **Security / Privacy Exposure**: Phát hiện lỗ hổng bảo mật, leak secrets hoặc vi phạm Server Trust Boundary.
 5. **Breaking API Changes**: Sửa đổi làm gãy contracts đang phục vụ client khác.
 6. **Irreversible Operations**: Thao tác xóa cột, drop table, purge cache diện rộng không thể rollback tức thì.
+7. **Architectural Trade-offs**: Phân vân kỹ thuật nền tảng (Queue vs Cron, Redis vs DB, Event-Driven vs Sync, chia module mới). Bắt buộc dừng lại, phân tích trade-offs và yêu cầu tạo ADR theo [docs/decisions/README.md](docs/decisions/README.md).
 
 ---
 
-## 5. Ranh Giới Kiến Trúc & Máy Chấm Tự Động (Architectural Invariants)
+## 5. Tiêu Chuẩn Hoàn Tất (Definition of Done - DoD)
 
-Các ranh giới kiến trúc cốt lõi dưới đây được **bảo vệ tự động bằng máy chấm** (`npm run test:fitness`):
-
-1. **Domain Purity (`src/domain/`)**:
-   - Tầng Domain chứa logic nghiệp vụ thuần khiết, tính toán toán học, entities, value objects.
-   - **Tuyệt đối CẤM import**: Database clients/ORMs (Prisma, Drizzle, TypeORM), Web frameworks (Next.js, Express), Network clients, UI components.
-2. **Stateless Services & Repositories**:
-   - Service singletons (`export const xService = new XService()`) phải **hoàn toàn stateless**.
-   - **Tuyệt đối CẤM lưu `userId`, session context, transaction** trong biến instance (`this.userId`). Toàn bộ context bắt buộc truyền qua function parameters.
-3. **Client/Server Isolation (`'use client'`)**:
-   - Client components tuyệt đối CẤM import trực tiếp DB client, server-only helpers (`server-only`, `node:fs`), secret keys.
-   - Mọi mutation xuống DB từ client phải đi qua Server Actions hoặc Route Handlers chuẩn hóa.
-4. **Server Trust Boundary**:
-   - Mọi database query tương tác dữ liệu người dùng bắt buộc phải lọc theo `userId` lấy từ session đã xác thực ở server. Cấm tin cậy `userId` truyền lên từ client body/params.
-5. **No Raw Env**:
-   - Cấm truy cập trực tiếp `process.env.*` rải rác. Mọi biến môi trường phải import qua schema validation tập trung (`src/lib/env.ts`).
-6. **Expand-and-Contract Migrations**:
-   - Không bao giờ đổi tên hoặc drop cột trong cùng 1 lần release. Luôn theo chu trình: `Expand (add nullable/default) -> Backfill -> Transition Read -> Contract (drop cũ)`.
+Một task chỉ được coi là hoàn tất (`status: completed`) khi thỏa mãn toàn bộ 7 tiêu chí:
+1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) đã được Developer duyệt (`status: approved`).
+2. **Spec Synchronized**: Đặc tả nghiệp vụ (`docs/main_docs/<ACTIVE_VERSION>/fn/`) đã được cập nhật đồng bộ nếu có thay đổi hành vi (`Spec Impact: CHANGE/CLARIFICATION`).
+3. **Automated Tests Pass**: Mọi test suites liên quan đều PASS (nếu dự án có cấu hình test runner).
+4. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` thực thi thành công với Exit code 0.
+5. **No Open Assumptions**: Toàn bộ giả định mở hoặc xung đột kiến trúc/nghiệp vụ đã được giải quyết triệt để.
+6. **Documentation & Memory Updated**: Đã cập nhật ADR (nếu chạm trigger), pitfalls/lessons (nếu phát hiện bẫy mới).
+7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ, không sót file nhạy cảm hay file rác.
 
 ---
 
-## 6. Phân Cấp Luồng Trọng Yếu & Độ Nhạy Rủi Ro (Critical Flows P0 - P4)
+## 6. Ranh Giới Kiến Trúc & Máy Chấm Tự Động (Architectural Invariants)
+
+Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy định tại [docs/fitness-functions/architecture-rules.md](docs/fitness-functions/architecture-rules.md) và được kiểm tra tự động qua `npm run test:fitness`:
+
+1. **Domain Purity (`src/domain/`)**: Logic nghiệp vụ thuần khiết, cấm import DB, ORMs, Web frameworks, Network clients, UI components.
+2. **Stateless Services & Repositories**: Service singletons cấm lưu `userId` hay request context trong biến instance (`this.*`).
+3. **Client/Server Isolation (`'use client'`)**: Client components cấm import DB client, server secrets, server-only helpers.
+4. **Server Trust Boundary**: Mọi query DB phải scope theo `userId` từ session đã xác thực ở server; cấm tin cậy client params.
+5. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`).
+6. **Expand-and-Contract Migrations**: Không bao giờ đổi tên hoặc drop cột cùng lúc; tuân thủ chu trình Expand -> Backfill -> Contract.
+7. **Performance Guardrails**: Cấm unbounded query, cấm `SELECT *`, bắt buộc phân trang, chống N+1 (xem [docs/standards/performance.md](docs/standards/performance.md)).
+
+---
+
+## 7. Phân Cấp Luồng Trọng Yếu & Độ Nhạy Rủi Ro (Critical Flows P0 - P4)
 
 | Mức Độ | Tên Luồng | Ví Dụ Điển Hình | Tác Động Khi Lỗi | Auto Risk & Ràng Buộc |
 | :--- | :--- | :--- | :--- | :--- |
@@ -153,7 +159,7 @@ Các ranh giới kiến trúc cốt lõi dưới đây được **bảo vệ t�
 
 ---
 
-## 7. Quản Lý Ngân Sách Ngữ Cảnh & Context Packages (Context Budget)
+## 8. Quản Lý Ngân Sách Ngữ Cảnh & Context Packages (Context Budget)
 
 Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh gọn để chống ảo giác:
 
@@ -171,9 +177,9 @@ Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh g
 
 ---
 
-## 8. Vòng Đời Tri Thức & Quy Tắc Lưu Trữ (Knowledge Lifecycle)
+## 9. Vòng Đời Tri Thức & Quy Tắc Lưu Trữ (Knowledge Lifecycle)
 
-Để ngăn ngừa việc sau 2-5 năm kho tri thức biến thành "bãi rác tài liệu" (Document Cemetery/Junkyard), toàn bộ dự án tuân thủ [docs/governance/knowledge-lifecycle.md](file:///docs/governance/knowledge-lifecycle.md):
+Để ngăn ngừa việc sau 2-5 năm kho tri thức biến thành "bãi rác tài liệu" (Document Cemetery/Junkyard), toàn bộ dự án tuân thủ [docs/governance/knowledge-lifecycle.md](docs/governance/knowledge-lifecycle.md):
 
 1. **Completed Tasks (`docs/tasks/**`)**: Sau **6 tháng** hoàn thành -> chuyển vào `docs/archive/tasks/<YYYY>/`.
 2. **Resolved Incidents (`docs/engineering-incidents/**`)**: Sau **12 tháng** -> chắt lọc bài học vào `known-pitfalls.md` hoặc `technical-lessons.md` rồi chuyển vào `docs/archive/incidents/<YYYY>/`.
@@ -182,20 +188,20 @@ Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh g
 
 ---
 
-## 9. Bản Đồ Tra Cứu Theo Nhu Cầu (On-Demand Routing Map)
+## 10. Bản Đồ Tra Cứu Theo Nhu Cầu (On-Demand Routing Map)
 
 Khi cần tra cứu sâu, AI truy cập các điểm neo tương ứng (không nạp toàn bộ vào một lần):
 
 | Lĩnh Vực | Nguồn Sự Thật Cần Tra Cứu |
 | :--- | :--- |
-| **Cẩm Nang & Bootstrap** | [docs/HOW_WE_WORK.md](file:///docs/HOW_WE_WORK.md) (Hướng dẫn toàn diện SEOS) |
-| **10 Điều Bất Biến (One-Pager)**| [docs/operations/quick-checklist.md](file:///docs/operations/quick-checklist.md) |
-| **Kiểm Định Trước Release** | [docs/operations/preflight-checklist.md](file:///docs/operations/preflight-checklist.md) |
+| **Cẩm Nang & Bootstrap** | [docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md) (Hướng dẫn toàn diện SEOS) |
+| **10 Điều Bất Biến (One-Pager)**| [docs/operations/quick-checklist.md](docs/operations/quick-checklist.md) |
+| **Kiểm Định Trước Release** | [docs/operations/preflight-checklist.md](docs/operations/preflight-checklist.md) |
 | **Đặc Tả Nghiệp Vụ ("WHAT")** | `docs/main_docs/<ACTIVE_VERSION>/fn/*.md` |
 | **Ranh Giới Phân Tầng & Luồng Sống Còn** | `docs/system-map/modules.md`, `dependencies.md`, `critical-paths.md` |
 | **SOP Tác Chiến (Playbooks)** | `docs/playbooks/` (bug-investigation, feature-dev, db-migration, incident) |
-| **Máy Chấm Tự Động (Fitness)** | `docs/fitness-functions/architecture-rules.md`, `ci-enforcement.md` |
+| **Máy Chấm Tự Động (Fitness)** | [docs/fitness-functions/architecture-rules.md](docs/fitness-functions/architecture-rules.md), [ci-enforcement.md](docs/fitness-functions/ci-enforcement.md) |
 | **Ký Ức Kỹ Thuật (Memory)** | `docs/project-memory/` (known-pitfalls, rejected-solutions, technical-lessons) |
-| **Quy Chuẩn Code Chi Tiết** | `docs/standards/` (architecture, database, security, testing, typescript) |
-| **Quyết Định Kiến Trúc (ADR)** | `docs/decisions/` |
-| **Vòng Đời Tài Liệu (Governance)**| `docs/governance/knowledge-lifecycle.md` |
+| **Quy Chuẩn Code & Tiêu Chuẩn Kỹ Thuật** | `docs/standards/` ([observability.md](docs/standards/observability.md), [performance.md](docs/standards/performance.md), README) |
+| **Quyết Định Kiến Trúc (ADR)** | [docs/decisions/README.md](docs/decisions/README.md) (Quy chế & 5 Mandatory Triggers) |
+| **Vòng Đời Tài Liệu (Governance)**| [docs/governance/knowledge-lifecycle.md](docs/governance/knowledge-lifecycle.md) |
