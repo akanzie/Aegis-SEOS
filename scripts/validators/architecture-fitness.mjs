@@ -52,11 +52,12 @@ function normalizeRelativePath(filePath) {
 
 /**
  * Strip single-line and multi-line comments while preserving exact character offsets and newlines.
- * Does not strip slashes inside strings or template literals.
+ * Handles template literals and nested template expressions (${...}) without premature closing.
  */
 function stripComments(code) {
   let result = '';
   let state = 'default';
+  const templateStack = [];
   let i = 0;
   const n = code.length;
 
@@ -75,7 +76,7 @@ function stripComments(code) {
         result += '  ';
         i += 2;
         continue;
-      } else if (char === "'" || char === '"' || char === '`') {
+      } else if (char === "'" || char === '"') {
         const quote = char;
         result += quote;
         i++;
@@ -93,6 +94,25 @@ function stripComments(code) {
             i++;
           }
         }
+      } else if (char === '`') {
+        state = 'string_template';
+        templateStack.push(0);
+        result += '`';
+        i++;
+      } else if (char === '{' && templateStack.length > 0) {
+        templateStack[templateStack.length - 1]++;
+        result += char;
+        i++;
+      } else if (char === '}' && templateStack.length > 0) {
+        const currentDepth = templateStack[templateStack.length - 1];
+        if (currentDepth === 1) {
+          templateStack[templateStack.length - 1] = 0;
+          state = 'string_template';
+        } else if (currentDepth > 1) {
+          templateStack[templateStack.length - 1]--;
+        }
+        result += char;
+        i++;
       } else {
         result += char;
         i++;
@@ -118,6 +138,26 @@ function stripComments(code) {
         result += ' ';
         i++;
       }
+    } else if (state === 'string_template') {
+      if (char === '\\' && i + 1 < n) {
+        result += char + code[i + 1];
+        i += 2;
+        continue;
+      } else if (char === '`') {
+        templateStack.pop();
+        state = 'default';
+        result += '`';
+        i++;
+      } else if (char === '$' && next === '{') {
+        templateStack[templateStack.length - 1] = 1;
+        state = 'default';
+        result += '${';
+        i += 2;
+        continue;
+      } else {
+        result += char;
+        i++;
+      }
     }
   }
   return result;
@@ -139,22 +179,26 @@ function parseSourceFile(cleanCode) {
   let i = 0;
   const n = cleanCode.length;
 
-  function getPrecedingContext(quoteIndex) {
+  function checkImportContext(quoteIndex) {
     let p = quoteIndex - 1;
     while (p >= 0 && /\s/.test(cleanCode[p])) {
       p--;
     }
-    const end = p + 1;
-    const start = Math.max(0, end - 30);
-    return cleanCode.substring(start, end);
-  }
+    if (p < 0) return null;
 
-  function checkImportContext(quoteIndex) {
-    const prev = getPrecedingContext(quoteIndex);
-    if (/\bfrom$/.test(prev)) return 'from';
-    if (/\bimport$/.test(prev)) return 'side_effect_import';
-    if (/\bimport\s*\($/.test(prev)) return 'dynamic_import';
-    if (/\brequire\s*\($/.test(prev)) return 'require';
+    if (cleanCode[p] === '(') {
+      let q = p - 1;
+      while (q >= 0 && /\s/.test(cleanCode[q])) {
+        q--;
+      }
+      const callPrefix = cleanCode.substring(Math.max(0, q - 20), q + 1);
+      if (/\bimport$/.test(callPrefix)) return 'dynamic_import';
+      if (/\brequire$/.test(callPrefix)) return 'require';
+    } else {
+      const prefix = cleanCode.substring(Math.max(0, p - 20), p + 1);
+      if (/\bfrom$/.test(prefix)) return 'from';
+      if (/\bimport$/.test(prefix)) return 'side_effect_import';
+    }
     return null;
   }
 
@@ -163,8 +207,8 @@ function parseSourceFile(cleanCode) {
 
   function flushToken() {
     if (tokenBuffer === 'process') {
-      const slice = cleanCode.substring(tokenStartIndex, tokenStartIndex + 30);
-      const match = /^process\s*\.\s*env\b/.exec(slice);
+      const remainingCode = cleanCode.substring(tokenStartIndex);
+      const match = /^process\s*\.\s*env\b/.exec(remainingCode);
       if (match) {
         rawEnvAccesses.push({
           index: tokenStartIndex,
@@ -273,6 +317,7 @@ function getLineSnippet(rawContent, lineNum) {
 function checkForbiddenModule(specifier, forbiddenList) {
   for (const item of forbiddenList) {
     if (item instanceof RegExp) {
+      item.lastIndex = 0;
       if (item.test(specifier)) return item.toString();
     } else if (typeof item === 'string') {
       if (specifier === item || specifier.startsWith(item + '/')) {
@@ -358,7 +403,7 @@ for (const filePath of allFiles) {
   const isDomain = relPath.startsWith('src/domain/');
   const isClientComponent = /^\s*['"]use client['"]/.test(cleanContent.replace(/^\uFEFF/, ''));
   const isEnvConfigFile = ALLOWED_ENV_CONFIG_FILES.has(relPath);
-  const isTestFile = relPath.includes('__tests__') || /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(relPath);
+  const isTestFile = relPath.includes('/__tests__/') || /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(relPath);
 
   const { imports, rawEnvAccesses } = parseSourceFile(cleanContent);
 
@@ -375,7 +420,7 @@ for (const filePath of allFiles) {
             'Rule 1 (Domain Purity)',
             relPath,
             lineNum,
-            `Domain layer cannot import external framework/database module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
+            `Domain layer cannot import forbidden infrastructure, framework, UI, or network module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
           );
         }
       }
@@ -387,7 +432,7 @@ for (const filePath of allFiles) {
             'Rule 2 (Client/Server Isolation)',
             relPath,
             lineNum,
-            `'use client' component cannot import server/database module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
+            `'use client' component cannot import forbidden server-only, database, or Node.js module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
           );
         }
       }
