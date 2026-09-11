@@ -3,10 +3,124 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const ROOT_DIR = process.cwd();
-const SRC_DIR = path.join(ROOT_DIR, 'src');
 const IS_STRICT = process.argv.includes('--strict');
+
+/**
+ * Default Reference Architecture Policy for Aegis-SEOS (Node.js/TypeScript).
+ * Individual repositories can override any of these options via architecture-fitness.config.mjs.
+ */
+export const DEFAULT_CONFIG = {
+  // Directories to scan for source files
+  sourceRoots: ['src'],
+
+  // Glob, prefix, or RegExp patterns to identify Domain layer files
+  domainPatterns: [
+    'src/domain/',
+    'src/modules/*/domain/'
+  ],
+
+  // Client directive for React Server Components / UI files (set to null if backend-only)
+  clientDirective: 'use client',
+
+  // Forbidden modules in the Domain layer (Rule 1: Domain Purity)
+  forbiddenDomainModules: [
+    '@prisma',
+    'prisma',
+    'drizzle-orm',
+    'typeorm',
+    'mongoose',
+    'pg',
+    'mysql2',
+    '@/lib/db',
+    '@/infra/db',
+    'next',
+    'express',
+    'fastify',
+    'react',
+    'react-dom',
+    'axios'
+  ],
+
+  // Forbidden modules in Client Components (Rule 2: Client/Server Isolation)
+  forbiddenClientModules: [
+    '@prisma',
+    'prisma',
+    'drizzle-orm',
+    'typeorm',
+    'mongoose',
+    'pg',
+    'mysql2',
+    '@/lib/db',
+    '@/infra/db',
+    '@/server',
+    'server-only',
+    /^node:/
+  ],
+
+  // Centralized environment files permitted to access raw process.env (Rule 3)
+  allowedEnvFiles: [
+    'src/lib/env.ts',
+    'src/config/env.ts',
+    'src/lib/env.js',
+    'src/config/env.js',
+    'src/lib/env.mjs',
+    'src/config/env.mjs'
+  ],
+
+  // Whether test files are exempted from raw process.env check
+  rawEnvTestExemption: true,
+
+  // Patterns to identify test files
+  testFilePatterns: [
+    '/__tests__/',
+    /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/
+  ],
+
+  // Directories ignored during recursive scanning
+  excludedDirectories: [
+    'node_modules',
+    '.git',
+    '.next',
+    'dist',
+    'coverage'
+  ]
+};
+
+/**
+ * Load policy configuration from architecture-fitness.config.{mjs,js,json} if present.
+ */
+async function loadConfig() {
+  const configFiles = [
+    'architecture-fitness.config.mjs',
+    'architecture-fitness.config.js',
+    'architecture-fitness.config.json'
+  ];
+
+  for (const filename of configFiles) {
+    const fullPath = path.join(ROOT_DIR, filename);
+    if (fs.existsSync(fullPath)) {
+      try {
+        if (filename.endsWith('.json')) {
+          const raw = fs.readFileSync(fullPath, 'utf-8');
+          const custom = JSON.parse(raw);
+          return { ...DEFAULT_CONFIG, ...custom, _configSource: filename };
+        } else {
+          const fileUrl = pathToFileURL(fullPath).href;
+          const imported = await import(fileUrl);
+          const custom = imported.default || imported;
+          return { ...DEFAULT_CONFIG, ...custom, _configSource: filename };
+        }
+      } catch (err) {
+        console.warn(`⚠️  [CONFIG] Failed to load custom configuration from ${filename}: ${err.message}`);
+      }
+    }
+  }
+
+  return { ...DEFAULT_CONFIG, _configSource: null };
+}
 
 const violations = [];
 const seenViolations = new Set();
@@ -22,7 +136,7 @@ function addViolation(rule, file, line, detail) {
 /**
  * Recursively collect all relevant source code files (.ts, .tsx, .js, .jsx, .mjs)
  */
-function collectFiles(dir) {
+function collectFiles(dir, excludedDirs) {
   let results = [];
   if (!fs.existsSync(dir)) return results;
 
@@ -30,14 +144,8 @@ function collectFiles(dir) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (
-        entry.name !== 'node_modules' &&
-        entry.name !== '.git' &&
-        entry.name !== '.next' &&
-        entry.name !== 'dist' &&
-        entry.name !== 'coverage'
-      ) {
-        results = results.concat(collectFiles(fullPath));
+      if (!excludedDirs.includes(entry.name)) {
+        results = results.concat(collectFiles(fullPath, excludedDirs));
       }
     } else if (/\.(ts|tsx|js|jsx|mjs)$/.test(entry.name)) {
       results.push(fullPath);
@@ -328,142 +436,166 @@ function checkForbiddenModule(specifier, forbiddenList) {
   return null;
 }
 
-console.log('====================================================');
-console.log('🔍 [FITNESS] Running Architecture Boundary Validator');
-console.log('====================================================');
+/**
+ * Determine if a file path belongs to the Domain layer based on configured patterns.
+ */
+function isDomainFile(relPath, domainPatterns) {
+  for (const pattern of domainPatterns) {
+    if (pattern instanceof RegExp) {
+      pattern.lastIndex = 0;
+      if (pattern.test(relPath)) return true;
+    } else if (typeof pattern === 'string') {
+      if (pattern.includes('*')) {
+        const regexStr = '^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]+');
+        if (new RegExp(regexStr).test(relPath)) return true;
+      } else if (relPath.startsWith(pattern)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
-if (!fs.existsSync(SRC_DIR)) {
-  if (IS_STRICT) {
-    console.error('❌ [FAIL] Strict mode: src/ directory not found.');
+/**
+ * Determine if a file path is recognized as a test file based on configured test patterns.
+ */
+function isTestFile(relPath, config) {
+  if (!config.rawEnvTestExemption) return false;
+  for (const pattern of config.testFilePatterns) {
+    if (pattern instanceof RegExp) {
+      pattern.lastIndex = 0;
+      if (pattern.test(relPath)) return true;
+    } else if (typeof pattern === 'string') {
+      if (relPath.includes(pattern)) return true;
+    }
+  }
+  return false;
+}
+
+// ====================================================
+// MAIN VALIDATOR EXECUTION
+// ====================================================
+
+async function run() {
+  console.log('====================================================');
+  console.log('🔍 [FITNESS] Running Architecture Boundary Validator');
+  console.log('====================================================');
+
+  const config = await loadConfig();
+  if (config._configSource) {
+    console.log(`⚙️  [POLICY] Loaded custom policy from ${config._configSource}`);
+  } else {
+    console.log('ℹ️  [POLICY] Using default reference policy (zero-config mode)');
+  }
+
+  // Collect source files from all configured sourceRoots
+  let allFiles = [];
+  let existingRoots = [];
+
+  for (const root of config.sourceRoots) {
+    const rootDir = path.join(ROOT_DIR, root);
+    if (fs.existsSync(rootDir)) {
+      existingRoots.push(root);
+      allFiles = allFiles.concat(collectFiles(rootDir, config.excludedDirectories));
+    }
+  }
+
+  if (existingRoots.length === 0) {
+    if (IS_STRICT) {
+      console.error(`❌ [FAIL] Strict mode: none of the configured source roots exist (${config.sourceRoots.join(', ')}).`);
+      process.exit(1);
+    }
+    console.log(`ℹ️  No configured source roots detected (${config.sourceRoots.join(', ')}). Architecture boundaries intact.`);
+    console.log('✅ [PASS] 0 violations found across 0 files.');
+    process.exit(0);
+  }
+
+  if (IS_STRICT && allFiles.length === 0) {
+    console.error(`❌ [FAIL] Strict mode: no supported source files found in source roots (${existingRoots.join(', ')}).`);
     process.exit(1);
   }
-  console.log('ℹ️  No src/ directory detected yet. Architecture boundaries are currently intact.');
-  console.log('✅ [PASS] 0 violations found across 0 files.');
-  process.exit(0);
-}
 
-const allFiles = collectFiles(SRC_DIR);
+  console.log(`📁 Scanning ${allFiles.length} source file(s) across roots [${existingRoots.join(', ')}]...`);
 
-if (IS_STRICT && allFiles.length === 0) {
-  console.error('❌ [FAIL] Strict mode: no supported source files found in src/.');
-  process.exit(1);
-}
+  const allowedEnvSet = new Set(config.allowedEnvFiles);
 
-console.log(`📁 Scanning ${allFiles.length} source file(s) in src/...`);
+  for (const filePath of allFiles) {
+    const relPath = normalizeRelativePath(filePath);
+    const rawContent = fs.readFileSync(filePath, 'utf-8');
+    const cleanContent = stripComments(rawContent);
 
-// Rule 1: Domain Purity Forbidden Modules
-const FORBIDDEN_DOMAIN_MODULES = [
-  '@prisma',
-  'prisma',
-  'drizzle-orm',
-  'typeorm',
-  'mongoose',
-  'pg',
-  'mysql2',
-  '@/lib/db',
-  '@/infra/db',
-  'next',
-  'express',
-  'fastify',
-  'react',
-  'react-dom',
-  'axios'
-];
+    const isDomain = isDomainFile(relPath, config.domainPatterns);
+    const isClientComponent = config.clientDirective
+      ? new RegExp(`^\\s*['"]${config.clientDirective}['"]`).test(cleanContent.replace(/^\uFEFF/, ''))
+      : false;
+    const isEnvConfigFile = allowedEnvSet.has(relPath);
+    const isTest = isTestFile(relPath, config);
 
-// Rule 2: Client/Server Isolation Forbidden Modules
-const FORBIDDEN_CLIENT_MODULES = [
-  '@prisma',
-  'prisma',
-  'drizzle-orm',
-  'typeorm',
-  'mongoose',
-  'pg',
-  'mysql2',
-  '@/lib/db',
-  '@/infra/db',
-  '@/server',
-  'server-only',
-  /^node:/
-];
+    const { imports, rawEnvAccesses } = parseSourceFile(cleanContent);
 
-const ALLOWED_ENV_CONFIG_FILES = new Set([
-  'src/lib/env.ts',
-  'src/config/env.ts',
-  'src/lib/env.js',
-  'src/config/env.js',
-  'src/lib/env.mjs',
-  'src/config/env.mjs'
-]);
+    // Check Rule 1 & Rule 2: Module Imports
+    if (isDomain || isClientComponent) {
+      for (const imp of imports) {
+        const lineNum = getLineNumber(cleanContent, imp.index);
+        const snippet = getLineSnippet(rawContent, lineNum);
 
-for (const filePath of allFiles) {
-  const relPath = normalizeRelativePath(filePath);
-  const rawContent = fs.readFileSync(filePath, 'utf-8');
-  const cleanContent = stripComments(rawContent);
+        if (isDomain) {
+          const matched = checkForbiddenModule(imp.specifier, config.forbiddenDomainModules);
+          if (matched) {
+            addViolation(
+              'Rule 1 (Domain Purity)',
+              relPath,
+              lineNum,
+              `Domain layer cannot import forbidden infrastructure, framework, UI, or network module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
+            );
+          }
+        }
 
-  const isDomain = relPath.startsWith('src/domain/');
-  const isClientComponent = /^\s*['"]use client['"]/.test(cleanContent.replace(/^\uFEFF/, ''));
-  const isEnvConfigFile = ALLOWED_ENV_CONFIG_FILES.has(relPath);
-  const isTestFile = relPath.includes('/__tests__/') || /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(relPath);
-
-  const { imports, rawEnvAccesses } = parseSourceFile(cleanContent);
-
-  // Check Rule 1 & Rule 2: Module Imports
-  if (isDomain || isClientComponent) {
-    for (const imp of imports) {
-      const lineNum = getLineNumber(cleanContent, imp.index);
-      const snippet = getLineSnippet(rawContent, lineNum);
-
-      if (isDomain) {
-        const matched = checkForbiddenModule(imp.specifier, FORBIDDEN_DOMAIN_MODULES);
-        if (matched) {
-          addViolation(
-            'Rule 1 (Domain Purity)',
-            relPath,
-            lineNum,
-            `Domain layer cannot import forbidden infrastructure, framework, UI, or network module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
-          );
+        if (isClientComponent) {
+          const matched = checkForbiddenModule(imp.specifier, config.forbiddenClientModules);
+          if (matched) {
+            addViolation(
+              'Rule 2 (Client/Server Isolation)',
+              relPath,
+              lineNum,
+              `'use client' component cannot import forbidden server-only, database, or Node.js module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
+            );
+          }
         }
       }
+    }
 
-      if (isClientComponent) {
-        const matched = checkForbiddenModule(imp.specifier, FORBIDDEN_CLIENT_MODULES);
-        if (matched) {
-          addViolation(
-            'Rule 2 (Client/Server Isolation)',
-            relPath,
-            lineNum,
-            `'use client' component cannot import forbidden server-only, database, or Node.js module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
-          );
-        }
+    // Check Rule 3: No Raw process.env
+    if (!isEnvConfigFile && !isTest) {
+      for (const envAccess of rawEnvAccesses) {
+        const lineNum = getLineNumber(cleanContent, envAccess.index);
+        const snippet = getLineSnippet(rawContent, lineNum);
+        addViolation(
+          'Rule 3 (No Raw process.env)',
+          relPath,
+          lineNum,
+          `Direct process.env access forbidden outside centralized env config: "${snippet}"`
+        );
       }
     }
   }
 
-  // Check Rule 3: No Raw process.env
-  if (!isEnvConfigFile && !isTestFile) {
-    for (const envAccess of rawEnvAccesses) {
-      const lineNum = getLineNumber(cleanContent, envAccess.index);
-      const snippet = getLineSnippet(rawContent, lineNum);
-      addViolation(
-        'Rule 3 (No Raw process.env)',
-        relPath,
-        lineNum,
-        `Direct process.env access forbidden outside centralized env config: "${snippet}"`
-      );
-    }
+  // Summary & Exit
+  if (violations.length > 0) {
+    console.error('\n❌ [FAIL] Architecture Boundary Violations Detected:');
+    violations.forEach((v, i) => {
+      console.error(`  ${i + 1}. [${v.rule}] ${v.file}:${v.line}`);
+      console.error(`     └─ ${v.detail}`);
+    });
+    console.error(`\n🚨 Total violations: ${violations.length}. Please fix before committing.\n`);
+    process.exit(1);
+  } else {
+    console.log('✅ [PASS] All architecture boundaries validated successfully! (0 violations)');
+    process.exit(0);
   }
 }
 
-// Summary & Exit
-if (violations.length > 0) {
-  console.error('\n❌ [FAIL] Architecture Boundary Violations Detected:');
-  violations.forEach((v, i) => {
-    console.error(`  ${i + 1}. [${v.rule}] ${v.file}:${v.line}`);
-    console.error(`     └─ ${v.detail}`);
-  });
-  console.error(`\n🚨 Total violations: ${violations.length}. Please fix before committing.\n`);
+run().catch((err) => {
+  console.error('💥 Fatal error in architecture validator:', err);
   process.exit(1);
-} else {
-  console.log('✅ [PASS] All architecture boundaries validated successfully! (0 violations)');
-  process.exit(0);
-}
+});
