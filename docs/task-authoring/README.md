@@ -14,10 +14,15 @@ Trước khi handoff, tự review task record: acceptance source khớp AC; AC q
 
 ## 2. Phân rã theo kết quả
 
+- Một task là một kết quả có thể nghiệm thu độc lập; task có thể kéo dài qua nhiều session. Session kết thúc tại checkpoint có ý nghĩa (ví dụ bị ngắt, cần quyết định hoặc bàn giao), không phải đơn vị mặc định để chia task.
+- Chọn cỡ task theo AC và trạng thái trung gian an toàn: tách khi mỗi phần có AC, bằng chứng nghiệm thu riêng và contract rõ để chạy tuần tự; gộp khi các thay đổi chỉ tạo một kết quả và không có trạng thái trung gian an toàn để nghiệm thu. Đừng tách chỉ vì khác file/layer, hoặc tạo handoff cho từng bước nhỏ.
+- Ví dụ giả lập: luồng OAuth redirect → callback → success/error có thể là một task nếu được nghiệm thu như một kết quả cùng checklist resume. Chỉ tách contract/provider khỏi callback/error khi mỗi phần có kết quả nghiệm thu riêng; nếu callback cần contract trước, khai báo dependency và chạy tuần tự. Đây là ví dụ quy trình, không khẳng định repo có OAuth runtime.
 - Mặc định một task cho một mục tiêu có thể nghiệm thu; giữ code, tests và docs của mục tiêu đó cùng task.
 - Chỉ tách khi kết quả có thể điều tra, thực thi và nghiệm thu độc lập; không chia chỉ theo DB/service/UI/tests.
 - Task quá lớn được tách theo hành vi hoặc giai đoạn chuyển đổi có trạng thái trung gian an toàn và tiêu chí riêng.
 - Ghi `depends_on` nếu task dùng contract/kết quả tiền đề. Dependencies phải tồn tại và không có chu trình. Chỉ chạy song song khi không xung đột ownership hoặc dữ liệu đang thay đổi.
+
+Mỗi request folder có namespace `task_id` riêng; ID duy nhất trong folder và `depends_on` chỉ trỏ ID cùng folder. Task record phải ghi owner chịu trách nhiệm, write scope (đường dẫn/tài nguyên được phép sửa), branch và worktree. Dùng chung checkout/tài nguyên ghi thì chạy tuần tự; song song cần worktree riêng và scope không xung đột. Điều kiện dependency-ready và nội dung checkpoint do [Task Lifecycle](../operations/task-lifecycle.md#dependency-readiness-and-checkpoints) sở hữu.
 
 ## 3. Plan sau INVESTIGATE
 

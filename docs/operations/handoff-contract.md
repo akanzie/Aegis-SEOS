@@ -1,5 +1,7 @@
 # Handoff Contract: Task, Session Và Pull Request
 
+Task record là nguồn canonical duy nhất cho approval, execution status và checkpoint hiện hành. Handoff là phần bổ sung theo nhu cầu: link task/checkpoint, ghi evidence hoặc finding mới và next authority; không chép lại AC, approval, status hay evidence đã có. Một task có thể qua nhiều session, nên chỉ lập handoff khi cần truyền trạng thái có ý nghĩa (ngắt, chờ quyết định, bàn giao), không phải sau mỗi bước nhỏ.
+
 Mẫu copy dùng trực tiếp: [Handoff](../templates/handoff.md).
 
 Bàn giao có độ dài tương xứng thay đổi. Task nhỏ chỉ cần tóm tắt và verification; task phức tạp dùng bảng AC. Không cần tạo PR cho mọi task; tạo/push/merge/deploy vẫn theo quyền được cấp.

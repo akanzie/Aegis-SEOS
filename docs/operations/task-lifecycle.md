@@ -29,6 +29,14 @@ Approval transitions: `pending -> approved` khi authority duyệt đúng revisio
 | `failed` | `in_progress`, `cancelled`, `superseded` | Resume sau recovery; reapproval delta nếu scope/risk/contracts đổi; terminal decisions do authority | Giữ failure evidence và diff; không reset/stash |
 | `cancelled`, `completed`, `superseded` | Không có transition ngược | Terminal; mở lại qua task mới hoặc approved rework record | Giữ artifacts; superseding task link task cũ |
 
+<a id="dependency-readiness-and-checkpoints"></a>
+### Dependency readiness và checkpoint
+
+- `task_id` duy nhất trong một request folder; `depends_on` chỉ tham chiếu ID cùng folder. Dependency không tồn tại, có chu trình, hoặc chưa đủ evidence readiness thì chặn task phụ thuộc.
+- Dependency sẵn sàng khi approval của task tiền đề còn bao revision/contract mà task sau tiêu thụ, `execution_status: completed`, và output/evidence được link rõ tới revision đó. `completed` đơn lẻ hoặc output không gắn revision không đủ.
+- Owner tiền đề giữ trạng thái canonical trong task record. §6 là checkpoint hiện hành: branch/HEAD/diff, việc đã làm, checks và revision, evidence/findings, blocker, next action và authority. Cập nhật cùng task record tại các checkpoint có ý nghĩa (ngắt session, chờ quyết định, hoặc bàn giao), không cần handoff cho từng bước nhỏ.
+- Handoff session/task trỏ tới checkpoint và chỉ bổ sung evidence/finding mới chưa có trong task record; không sao chép approval, AC, status hoặc dữ liệu checkpoint. Xem [Handoff Contract](handoff-contract.md).
+
 <a id="close-sequence"></a>
 ### Close sequence
 

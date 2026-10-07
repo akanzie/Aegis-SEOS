@@ -16,6 +16,7 @@
 - Branch / HEAD / diff đã kiểm tra: [Revision; chưa commit ghi rõ].
 - PR source / target SHA: [Khi áp dụng].
 - Baseline được bảo toàn / conditional commit: [Thông tin thực tế].
+- Canonical task/checkpoint: [Task record link; HEAD/diff, blocker, next action và authority đã ghi ở đó].
 
 ## 3. AC Evidence
 
@@ -31,7 +32,7 @@ Ghi lệnh, exit code, local/CI và revision; manual checks ghi người chạy,
 - Findings / manual checks / required CI còn mở: [IDs và trạng thái thật].
 - Rủi ro / giới hạn / rollback: [Thông tin khi áp dụng].
 - Independent review (nếu trigger): [Reviewer, independence basis, scope/revision, findings hoặc blocked chờ reviewer].
-- Checkpoint session chưa xong: [Đã làm, bằng chứng, blocker và bước tiếp theo].
+- New session evidence/findings only: [Chỉ nội dung mới chưa có trong task record; tránh sao chép approval, AC, status hoặc checkpoint].
 
 ## 5. Next Authority
 
