@@ -1,6 +1,6 @@
 # Execution Evidence: Context Cache Optimization
 
-Baseline `f946c78f4692731b8ecf75644c9158cd1cf15e12` + task diff trên branch `task/context-cache-optimization`. Approval ở [Task 1](task-1-fix.md); [token estimates](token-estimates.md) ghi công thức và giới hạn. Chưa commit; chờ independent review và Git close sequence.
+Baseline `f946c78f4692731b8ecf75644c9158cd1cf15e12`; implementation commit `1f8cc1c072a8b5da6af42b952e4ed1f465ba59ad` trên branch `task/context-cache-optimization`. Approval ở [Task 1](task-1-fix.md); [token estimates](token-estimates.md) ghi công thức và giới hạn. Independent review và post-implementation-commit checks đã PASS.
 
 ## AC evidence
 
@@ -11,7 +11,7 @@ Baseline `f946c78f4692731b8ecf75644c9158cd1cf15e12` + task diff trên branch `ta
 | AC-3 | PASS | README/checklist dùng owner links; active direct summaries/template metadata dùng hai trục approval/execution; legacy shorthand chỉ ở compatibility/historical records |
 | AC-4 | PASS | Catalog có docs-policy/validator verified paths/commands và trigger/sections; Auth reference không đổi; manifest/validator paths thực tồn tại |
 | AC-5 | PASS | Context Assembly có order/update/measurement/client limits; survey metadata cuối profile; cache hit/cost ghi UNVERIFIED |
-| AC-6 | PENDING | Local checks và independent review PASS; còn Git close sequence bên dưới |
+| AC-6 | PASS | Local checks/independent review PASS; task-only staged scope, implementation commit và post-commit clean tree; terminal metadata ghi trong close commit |
 
 ## Automated và manual checks
 
@@ -48,4 +48,8 @@ Pitfall mới: PowerShell pipe có thể làm mất Unicode trong source; ba fil
 
 ## Handoff / close sequence
 
-Execution `pending_verification`, chưa completed. Next: task-only staged diff, conditional local commit và post-commit clean tree; sau commit ghi terminal metadata/handoff trong metadata commit theo close sequence. Chưa có push/merge/deploy authorization; không tạo PR hoặc kết luận merge-ready. Recovery không tác động DB/runtime; Developer có thể revert task commit qua Git action được cấp quyền.
+Execution completed lúc `2026-10-07T12:25:03+07:00`, sau implementation commit và post-commit checks. `git status --short` sau commit `1f8cc1c` không có entries; baseline sạch. Staged diff chỉ 34 Markdown files thuộc task, không scratch/secrets/source runtime; substantive fingerprint khớp final independent review. Approval vẫn giữ riêng, `merged_at: null` vì chưa merge.
+
+Close commit chỉ ghi terminal task metadata/handoff sau khi DoD đạt, theo Task Lifecycle close sequence. Tests/fitness và independent review áp dụng implementation nguyên trạng; không chạy lại suites vì delta chỉ metadata. Final close-commit SHA và post-commit clean tree được báo trong chat để không tạo vòng lặp artifact chứa SHA của chính nó.
+
+Chưa có push/merge/deploy authorization; không tạo PR hoặc kết luận merge-ready. Recovery không tác động DB/runtime; Developer có thể revert task commit qua Git action được cấp quyền. Không open assumptions hoặc unresolved findings; actual cache/remote CI vẫn có giới hạn evidence đã ghi.
