@@ -10,17 +10,24 @@ Các quy tắc này được kiểm tra tự động qua lệnh `npm run test:fi
 
 > [!NOTE]
 > **Cơ Chế vs Chính Sách (Engine vs Policy)**:
-> - **Scanner Engine** (`scripts/validators/architecture-fitness.mjs`): Bộ phân tích cú pháp tĩnh dùng chung, hoàn toàn độc lập với tech stack (thu thập file, bóc tách comment, mask chuỗi thường, giữ template expression `${...}`, báo đúng dòng module specifier).
+> - **Scanner Engine** (`scripts/validators/architecture-fitness.mjs`): Lexer nhẹ cho JavaScript/TypeScript có thu thập file, bỏ comment, nhận diện một số import và process.env forms, lần theo import tương đối tĩnh. Đây không phải parser/AST và không chứng minh toàn bộ dependency hoặc data flow.
 > - **Reference Policy** (`scripts/validators/architecture-fitness-policy.mjs`): Chính sách tham chiếu mặc định cho dự án Node.js/TypeScript theo layout `src/`.
-> - **Custom Policy (`architecture-fitness.config.mjs`)**: Các dự án có cấu trúc khác biệt (Monorepo `apps/` + `packages/`, Modular Monolith `src/modules/*/domain/`, Backend thuần túy không dùng `'use client'`, v.v.) có thể tạo file cấu hình chuẩn hóa `architecture-fitness.config.mjs` ở thư mục gốc để ghi đè `sourceRoots`, `domainPatterns`, `clientDirective`, `forbiddenDomainModules`, và `allowedEnvFiles`. Custom array sẽ thay thế tương ứng cho default array.
+> - **Custom Policy (`architecture-fitness.config.mjs`)**: Cấu hình ứng dụng phải khai báo source roots thật; mọi root phải tồn tại và có ít nhất một file source được hỗ trợ. Các dự án có cấu trúc khác biệt có thể ghi đè roots/patterns/lists, nhưng empty deny lists và vô hiệu hóa client directive không được hỗ trợ. Custom arrays thay thế defaults, nên phải giữ mọi rule cần thiết.
+
+### Scanner support boundary
+
+- Machine checks cover literal static imports/exports, `require('literal')`, `import('literal')`, transitive relative imports resolvable within scanned roots, common direct/bracket/destructured process environment access forms, and configured network globals such as `fetch()` in domain dependency graphs.
+- Unsupported or unresolved cases include computed/dynamic module names, package export conditions, TypeScript path aliases that do not resolve as relative paths, generated modules, arbitrary variable/data-flow aliases, regular-expression/JSX syntax, and language syntax the lexer does not understand. Route these cases to source/type-aware review; do not claim the scanner proves them safe.
+- Output reports profile mode, configured roots, scanned count, and these limitations. `application` profiles fail if a configured root is absent or no supported file is scanned. `reference` mode may report zero source files only with an explicit statement that no rules were evaluated. Unresolved aliases or computed/dynamic module expressions produce REVIEW REQUIRED and exit code 2; they cannot be reported as fitness PASS until resolved and rerun.
+- Fixture isolation and machine-rule regression tests run with `npm test`; task structure and Markdown links use `npm run validate:tasks` and `npm run validate:docs`.
 
 <a id="rule-domain-purity"></a>
 ### Luật 1: Domain Is Pure (Tầng Nghiệp Vụ Thuần Khiết Tuyệt Đối)
 - **Cơ chế kiểm tra**: Máy chấm tự động (`scripts/validators/architecture-fitness.mjs`).
-- **Nội dung ràng buộc**: Mã nguồn trong `src/domain/` không được chứa bất kỳ câu lệnh `import` nào từ:
+- **Nội dung ràng buộc**: Mã nguồn trong domain roots cấu hình không được phụ thuộc trực tiếp hoặc qua relative imports có thể resolve vào:
   - Database clients / ORMs (`prisma`, `drizzle-orm`, `typeorm`, `mongoose`, `pg`, `mysql2`, `@/lib/db`, `@/infra/db`, v.v.).
   - Web frameworks (`next`, `express`, `fastify`, `react`, `react-dom`, v.v.).
-  - Network / HTTP clients (`axios`, fetch polyfills).
+  - Network / HTTP clients (`axios`, `node:http`, `node:https`, `fetch()` global).
 - **Mục đích**: Đảm bảo logic nghiệp vụ lõi độc lập hoàn toàn với hạ tầng công nghệ, dễ kiểm thử đơn vị độc lập và bền vững theo thời gian.
 
 <a id="rule-client-isolation"></a>
@@ -34,7 +41,7 @@ Các quy tắc này được kiểm tra tự động qua lệnh `npm run test:fi
 <a id="rule-no-raw-env"></a>
 ### Luật 3: No Raw Process Env (Môi Trường Tập Trung Có Schema)
 - **Cơ chế kiểm tra**: Máy chấm tự động (`scripts/validators/architecture-fitness.mjs`).
-- **Nội dung ràng buộc**: Cấm truy cập trực tiếp `process.env.<VAR>` trong mã nguồn ứng dụng (ngoài file schema validation tập trung `src/lib/env.ts` hoặc `src/config/env.ts`, và các file test).
+- **Nội dung ràng buộc**: Cấm raw process environment access dạng dot/bracket hoặc các destructured/local aliases phổ biến trong source đã scan (ngoài file schema validation tập trung cấu hình và test files được nhận diện).
 - **Mục đích**: Tránh lỗi runtime do thiếu biến môi trường hoặc sai chính tả cấu hình, bảo đảm fail-fast ngay khi khởi động ứng dụng.
 
 ---

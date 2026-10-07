@@ -40,6 +40,7 @@ Với policy docs P0/P1 không sửa runtime: phải review toàn bộ owner/dir
 - Mock external boundaries (DB/network/provider), không mock logic nghiệp vụ đang kiểm chứng để làm test pass.
 - Bao phủ error paths, boundary values, concurrency/idempotency khi blast radius yêu cầu.
 - Không sửa expectation để hợp thức hóa hành vi sai spec. Không tự khai báo coverage nếu chưa đo.
+- Không che lỗi để đạt PASS: cấm xóa/bỏ qua test liên quan, `.only`, giảm test discovery/coverage, thêm validator exclusion/suppression không được hỗ trợ, hoặc fallback âm thầm. Mọi ngoại lệ phải được authority duyệt đúng scope và nêu replacement evidence; reviewer kiểm tra test/gate changes cùng production changes.
 
 ## 3. Ghi bằng chứng
 

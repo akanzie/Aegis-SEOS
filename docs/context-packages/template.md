@@ -3,6 +3,7 @@
 - **Status**: [Verified paths hoặc reference example; không suy runtime tồn tại]
 - **Phases**: [Mode/phase áp dụng]
 - **Domain Scope**: `src/domain/[module]/`, `src/services/[module]/`
+- **Path status / entry points / conventions**: [Actual verified paths and entry points, or mark paths as exemplar/reference; identify local conventions and versioned evidence]
 - **Critical Flow Level**: `P0` | `P1` | `P2` | `P3` | `P4`
 - **Target Token Budget**: `<= 15,000 tokens` (package target; session budget/overflow theo [AGENTS §8](../../AGENTS.md#context-budget))
 

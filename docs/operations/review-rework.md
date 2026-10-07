@@ -18,6 +18,8 @@ Chọn severity cao nhất có bằng chứng. Blocker còn phụ thuộc AC, re
 <a id="independent-review"></a>
 ### Independent review
 
+Author tự review trước handoff: đối chiếu từng AC với thay đổi và kết quả thực tế; rà test/gate changes để phát hiện test bị xóa/skip, `.only`, discovery/coverage bị thu hẹp, validator exclusion/suppression không hỗ trợ hoặc fallback âm thầm; xác nhận ngoại lệ (nếu được duyệt) có scope và replacement evidence; rà unresolved assumptions, policy links và diff ngoài scope. Ghi revision cùng checklist/kết quả; self-review không thay independent review.
+
 | Trigger | Phạm vi và thời điểm |
 | :--- | :--- |
 | P0/P1 hoặc risk HIGH/CRITICAL | Review plan/decisions trước approval/execution; review implementation/evidence trước completed |
@@ -26,6 +28,8 @@ Chọn severity cao nhất có bằng chứng. Blocker còn phụ thuộc AC, re
 | PR/MR review | Thêm Merge Review Gate 10 câu trên source/target SHA; không thay independent review |
 
 Reviewer independent là người/session khác plan author và implementer, không tham gia decision/implementation đang review, ở mode REVIEW read-only, truy cập đủ evidence và báo findings. Developer có thể review nếu thỏa independence. Đổi session nhưng vẫn author/implementer không tạo independence. Reviewer chỉ approve khi Developer ủy quyền riêng. Thiếu reviewer đủ điều kiện thì `blocked` hoặc pending review, không completed; không tự tạo quyền delegation/công cụ.
+
+Với một operator, có thể dùng một reviewer session riêng chỉ khi session đó chưa tham gia soạn quyết định hoặc implementation, được cấp plan/diff/checks/evidence cần thiết, và chỉ làm REVIEW read-only. Cùng người vận hành không tự làm reviewer độc lập nếu họ đã là author/implementer. AI reviewer chỉ báo findings; không cấp task approval, exception, merge hoặc deploy authority. Ghi reviewer identity/session, scope, SHA và findings.
 
 
 ## Review và rework

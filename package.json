@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node scripts/validators/architecture-fitness.test.mjs",
-    "test:fitness": "node scripts/validators/architecture-fitness.mjs"
+    "test": "node scripts/validators/architecture-fitness.test.mjs && node scripts/validators/quality-guardrails.test.mjs",
+    "test:fitness": "node scripts/validators/architecture-fitness.mjs",
+    "validate:tasks": "node scripts/validators/validate-task-records.mjs",
+    "validate:docs": "node scripts/validators/validate-markdown-links.mjs"
   }
 }

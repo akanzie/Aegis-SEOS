@@ -22,9 +22,11 @@ approved_at: null
 - Spec active / Context Package: [Nguồn đã xác minh; ghi rõ nếu không có package phù hợp].
 - Actual / expected: [Điều kiện, hành vi lỗi và hành vi đúng theo spec].
 
-| AC | Hành vi cần đạt | Check bảo vệ ý định |
+| AC | Hành vi quan sát được theo acceptance source | Check bảo vệ ý định |
 | :--- | :--- | :--- |
-| AC-1 | [Điều kiện -> kết quả] | [Regression / integration / manual scenario] |
+| AC-1 | [Điều kiện -> kết quả quan sát được, pass/fail rõ] | [AUTOMATED_TEST / STATIC_CHECK / E2E / MANUAL] |
+
+Task cần ít nhất một AC hoàn chỉnh, không còn placeholder, và verification matrix phải bao phủ từng AC. Bao gồm happy path, boundary, error path và auth/concurrency/compatibility khi áp dụng.
 
 ## 2. Điều Tra Và Root Cause
 
@@ -76,3 +78,4 @@ Ghi PASS / FAIL / SKIPPED / NOT_RUN / BLOCKED / N/A có lý do. Manual checks gh
 - Branch / revision / staged scope / conditional commit: [Thông tin đã xác minh].
 - DoD / bước tiếp theo / authority: [Pending items; link handoff khi cần].
 - Chỉ chuyển `execution_status: completed` khi đạt Standard DoD, lifecycle review và close sequence; không để skipped/not run thành PASS.
+- Self-review trước handoff: AC/evidence khớp revision; không xóa/skip tests, dùng `.only`, giảm discovery/coverage, thêm exclusion/suppression không hỗ trợ hoặc fallback âm thầm; ghi scope và replacement evidence cho ngoại lệ đã duyệt.
