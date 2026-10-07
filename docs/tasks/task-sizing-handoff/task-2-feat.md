@@ -4,8 +4,8 @@ approval_status: approved
 approved_by: Developer
 approved_at: "2026-10-07T13:56:10+07:00"
 approved_revision: 541cfcdc9603ad78ebe0afc06bba153699180dbe
-execution_status: pending_verification
-closed_at: null
+execution_status: completed
+closed_at: "2026-10-07T14:17:38+07:00"
 merged_at: null
 critical_flow: P0
 risk_level: CRITICAL
@@ -84,6 +84,6 @@ worktree: "shared checkout; execute sequentially"
 
 ## 6. Execution Checkpoint / Handoff
 
-- Đã làm / checks đã chạy / findings còn mở: Task 1 completed trên HEAD `1eb891999b82b280a40cef07f82dc000a85d2b2f`; Developer xác nhận review độc lập Task 1 hoàn tất, implementation commit được review là `f9f7c3a660e5000c5107f5161b422fecc8b9048d`. Plan Task 2 revision `541cfcdc9603ad78ebe0afc06bba153699180dbe` được independent review `/root/task2_plan_review_artifact` PASS/no findings và Developer yêu cầu thực hiện. Implementation review độc lập `/root/task2_plan_review_artifact` PASS/no blockers trên validator/tests/Task 2 record; reviewer không sửa implementation. Các finding về fail-closed frontmatter, canonical unlinked evidence, identity khi nhiều task, bare SHA và exact branch comparison đã được xử lý và có fixtures. Post-implementation close validation phát hiện chỉ nhận header tiếng Anh cho completed AC table; đã sửa để nhận cả `Kết quả`/`Bằng chứng` và thêm fixture. Current full rerun: `npm.cmd test` PASS (9/9 architecture; 13/13 quality guardrails); `validate:tasks` PASS (7 records); `validate:docs` PASS (77 Markdown files); `test:fitness` PASS, reference mode/0 source files; `git diff --check` PASS. Independent re-review delta đang chờ.
-- Branch / revision / diff / staged scope / conditional commit: `task/task-sizing-handoff`; HEAD `5bf819f`; baseline compatibility `618cd55dcef242ae44a08c33a867f38a89ede64c`. Delta hiện tại chỉ sửa completed-evidence header parser, fixture tương ứng và checkpoint này; prompt điều tra còn untracked baseline, không thuộc scope.
-- DoD / bước tiếp theo / authority: Task ở `pending_verification`; chờ independent re-review delta, stage/review/conditional commit, rồi chạy post-commit gates trước khi ghi `completed`/`closed_at`. Developer giữ authority cho task tiếp theo, merge/push/deploy.
+- Đã làm / checks đã chạy / findings còn mở: Task 1 completed trên HEAD `1eb891999b82b280a40cef07f82dc000a85d2b2f`; Developer xác nhận review độc lập Task 1 hoàn tất, implementation commit được review là `f9f7c3a660e5000c5107f5161b422fecc8b9048d`. Plan Task 2 revision `541cfcdc9603ad78ebe0afc06bba153699180dbe` được independent review `/root/task2_plan_review_artifact` PASS/no findings và Developer yêu cầu thực hiện. Implementation review độc lập `/root/task2_plan_review_artifact` PASS/no blockers trên validator/tests/Task 2 record; reviewer không sửa implementation. Các finding về fail-closed frontmatter, canonical unlinked evidence, identity khi nhiều task, bare SHA, exact branch comparison và localized completed-evidence headers đã được xử lý và có fixtures. Implementation commits: `5bf819f` và review delta `36516e7`. Post-commit `npm.cmd test` PASS (9/9 architecture; 13/13 quality guardrails); `validate:tasks` PASS (7 records); `validate:docs` PASS (77 Markdown files); `test:fitness` PASS, reference mode/0 source files; `git diff --check` PASS. Re-review checkpoint trạng thái cuối PASS/no blockers. Không còn finding mở trong scope.
+- Branch / revision / diff / staged scope / conditional commit: `task/task-sizing-handoff`; checked HEAD `36516e7`; baseline compatibility `618cd55dcef242ae44a08c33a867f38a89ede64c`. Task 2 implementation and review delta are committed; close metadata is the remaining task change.
+- DoD / bước tiếp theo / authority: Standard DoD, review độc lập, conditional commits và post-implementation-commit gates PASS. `execution_status: completed`; `closed_at` ghi thời điểm đóng; `merged_at: null`. Không còn Task 2 action; Developer giữ authority cho task tiếp theo, merge/push/deploy.
