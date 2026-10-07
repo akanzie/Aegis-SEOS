@@ -1,5 +1,7 @@
 # Functional Specifications (v1.0)
 
+File mẫu riêng: [Functional spec template](../../../templates/functional-spec.md). Bản đề xuất chưa duyệt lưu trong task, chưa phải spec canonical.
+
 Thư mục này chứa toàn bộ các đặc tả chức năng nghiệp vụ (Functional Specs) của dự án ở phiên bản active `v1.0`.
 
 ## Cấu Trúc Đặt Tên File

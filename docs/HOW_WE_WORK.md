@@ -108,6 +108,7 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 ├── docs/
 │   ├── HOW_WE_WORK.md                   # File cẩm nang này
 │   ├── task-authoring/README.md         # Chuẩn hóa yêu cầu, AC và phân rã task
+│   ├── templates/                       # Prompt, task, profile, review/rework, handoff, ADR, spec
 │   ├── context-packages/                # First-Class Context Packages (Load/Do Not Load/Token Budget)
 │   ├── operations/
 │   │   ├── quick-checklist.md           # 1 trang One-Pager: 10 điều bất biến

@@ -1,5 +1,7 @@
 # Tasks & Work In Progress
 
+Các mẫu prompt/plan và báo cáo nằm tại [Bộ template vận hành](../templates/README.md); template chưa điền không phải task active.
+
 Thư mục này là trung tâm điều phối các yêu cầu công việc, batch prompts và task fixes:
 
 Soạn prompt/plan theo [Task Authoring](../task-authoring/README.md); quyền từng phase theo [Agent Workflow](../operations/agent-workflow.md). Quy tắc áp dụng cho cả `task-N-fix.md` và `task-N-feat.md`.

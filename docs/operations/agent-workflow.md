@@ -1,5 +1,7 @@
 # Agent Workflow: Mode, Approval, Review & Rework
 
+Mẫu artifacts theo phase: [Bộ template](../templates/README.md), [Review](../templates/review.md), [Rework](../templates/rework.md).
+
 Áp dụng cho mọi dự án dùng SEOS, không phụ thuộc nhà cung cấp AI, IDE hoặc công cụ điều phối. AGENTS.md là hợp đồng cao nhất; tài liệu này hướng dẫn thực hiện.
 
 ## 1. Nhận diện mode và quyền
