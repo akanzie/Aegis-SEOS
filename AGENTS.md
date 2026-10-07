@@ -65,7 +65,7 @@ Review PR/MR là read-only. Trả đủ [10 câu Merge Review Gate](docs/operati
 
 ## 4. Escalation
 
-Dừng ngay hành động phụ thuộc và báo Developer khi: spec/code conflict; >=2 diễn giải nghiệp vụ chưa rõ; migration compatibility/schema drift chưa rõ; security/privacy/trust boundary exposure; breaking API; irreversible operation; hoặc trade-off kiến trúc nền tảng. Trade-off cần phân tích và [ADR được chấp thuận](docs/decisions/README.md). Không tự quyết hoặc hòa giải ngầm. INVESTIGATE/READ_ONLY chỉ tiếp tục khảo sát độc lập an toàn; EXECUTE giữ diff/checkpoint và dừng phần phụ thuộc quyết định mở.
+Dừng ngay hành động phụ thuộc và hỏi Developer/authority khi có câu hỏi nghiệp vụ trọng yếu chưa được xác nhận, kể cả khi chỉ có một cách hiểu đang được giả định; đồng thời dừng khi: spec/code conflict; migration compatibility/schema drift chưa rõ; security/privacy/trust boundary exposure; breaking API; irreversible operation; hoặc trade-off kiến trúc nền tảng. Trade-off cần phân tích và [ADR được chấp thuận](docs/decisions/README.md). Không tự quyết hoặc hòa giải ngầm. INVESTIGATE/READ_ONLY chỉ tiếp tục khảo sát độc lập an toàn; EXECUTE giữ diff/checkpoint và dừng phần phụ thuộc quyết định mở.
 
 ## 5. Definition of Done
 

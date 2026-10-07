@@ -34,3 +34,5 @@ Auth reference package/module nghiệp vụ không liên quan; tasks ngoài scop
 ## Key invariants
 
 Giữ safety, hierarchy, approval authority, gate applicability và reviewer independence. Policy owner duy nhất; summaries không tạo quyền/gate mới. Thiếu validator/reviewer bắt buộc là blocker; không hạ risk vì Markdown.
+
+Trước khi archive request, kiểm tra approved decisions độc lập với execution status; decision còn hiệu lực phải có nội dung và traceability trong owner doc hoạt động. Chưa xác định được hiệu lực hoặc không chuyển an toàn thì giữ cả request. Owner và các bước xử lý thuộc [Knowledge Lifecycle §§2.A, 3](../governance/knowledge-lifecycle.md#archive-workflow); không tự nạp `docs/archive/**`.
