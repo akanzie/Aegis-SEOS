@@ -1,5 +1,7 @@
 # Architecture Decision Records (ADR)
 
+File mẫu riêng để copy: [ADR template](../templates/adr.md). Giữ `status: proposed` tới khi owner/Developer phê duyệt.
+
 Thư mục này ghi nhận các quyết định kiến trúc quan trọng có tầm ảnh hưởng lâu dài.
 
 ---

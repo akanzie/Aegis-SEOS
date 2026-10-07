@@ -1,5 +1,7 @@
 # Handoff Contract: Task, Session Và Pull Request
 
+Mẫu copy dùng trực tiếp: [Handoff](../templates/handoff.md).
+
 Bàn giao có độ dài tương xứng thay đổi. Task nhỏ chỉ cần tóm tắt và verification; task phức tạp dùng bảng AC. Không cần tạo PR cho mọi task; tạo/push/merge/deploy vẫn theo quyền được cấp.
 
 ## Nội dung cần có

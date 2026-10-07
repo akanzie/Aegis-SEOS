@@ -1,5 +1,7 @@
 # Task Authoring: Từ Yêu Cầu Đến Approved Plan
 
+Mẫu dùng trực tiếp: [Batch prompt](../templates/batch-prompt.md), [Task fix](../templates/task-fix.md), [Task feature](../templates/task-feat.md). Copy tới `docs/tasks/<request>/`, điền bằng chứng thực tế và giữ plan `draft` tới khi được duyệt.
+
 ## 1. Chuẩn hóa yêu cầu trong COMPOSE
 
 Phân biệt FACT (quan sát/bằng chứng), REQUIREMENT (mong muốn), ASSUMPTION (cần xác minh) và OPEN QUESTION (quyết định còn thiếu). Không biến giả định thành yêu cầu; không phát minh tính năng hoặc nguyên nhân kỹ thuật để lấp mẫu.

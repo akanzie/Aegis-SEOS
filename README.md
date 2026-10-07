@@ -118,6 +118,7 @@ npm run test:fitness
 
 ## 📖 Mục Lục Tài Liệu Cốt Lõi
 
+* 📝 [Bộ template vận hành (prompt, task, profile, review, rework, handoff, ADR, spec)](docs/templates/README.md)
 * 📘 [Cẩm nang vận hành SEOS (HOW_WE_WORK.md)](docs/HOW_WE_WORK.md)
 * 📋 [Checklist 10 điều bất biến & DoD One-Pager (quick-checklist.md)](docs/operations/quick-checklist.md)
 * 🚀 [Checklist kiểm định trước release (preflight-checklist.md)](docs/operations/preflight-checklist.md)

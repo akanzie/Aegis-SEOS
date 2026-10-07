@@ -1,5 +1,7 @@
 # Project Adoption: Áp Dụng SEOS Cho Mọi Dự Án
 
+Dùng [Project profile template](../templates/project-profile.md) khi tiếp nhận dự án; [profile hiện tại](project-profile.md) mô tả repository Aegis-SEOS.
+
 SEOS cung cấp lõi quy trình; project profile mô tả công nghệ và cách verify thực tế. Không đưa OpenClaw, framework, dịch vụ cloud hoặc luật nghiệp vụ riêng thành yêu cầu chung.
 
 ## 1. Khởi tạo hoặc tiếp nhận dự án

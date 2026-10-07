@@ -1,5 +1,7 @@
 # Preflight Checklist: Quy Trình Kiểm Tra Trước Release
 
+Mẫu báo cáo có đủ 10 câu Merge Review Gate: [Review template](../templates/review.md).
+
 Checklist này dành cho Developer và AI Agent trước khi hoàn tất PR hoặc kích hoạt deployment lên Production/Staging.
 
 ---
