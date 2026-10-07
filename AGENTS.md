@@ -14,7 +14,7 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 1. **Safety, Security & Boundary Integrity**: An toàn hệ thống, bảo mật dữ liệu, quyền riêng tư, ranh giới kiến trúc (Mục 2 & Mục 6).
 2. **Explicit Approved Developer Override**: Quyết định ghi đè nghiệp vụ rõ ràng của Developer trong prompt hiện tại.  
    *(Lưu ý: Tin nhắn chat thông thường chỉ ghi đè `fn` specs khi Dev tuyên bố rõ ràng đây là thay đổi nghiệp vụ; không tự ý suy diễn lời nói bóng gió để phá vỡ spec).*
-3. **Approved Task Decisions (`docs/tasks/**/task-*-fix.md`, `task-*-feat.md`)**: Các phân tích và quyết định đã được duyệt (`status: approved`).
+3. **Approved Task Decisions (`docs/tasks/**/task-*-fix.md`, `task-*-feat.md`)**: Các quyết định có `approval_status: approved`, `approved_by`, `approved_at`, `approved_revision` nhận diện đúng scope/revision. Approval độc lập `execution_status` và được giữ sau completed; compatibility status cũ theo [Agent Workflow](docs/operations/agent-workflow.md), không suy ra approval từ completed.
 4. **Functional Specifications (`docs/main_docs/<ACTIVE_VERSION>/fn/`)**: Nguồn sự thật cho logic nghiệp vụ (Business "WHAT").
 5. **Project Memory (`docs/project-memory/`)**:
    - `rejected-solutions.md`: Các giải pháp đã bị bác bỏ (cấm đề xuất lại).
@@ -92,9 +92,9 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
 Áp dụng cho mọi tính năng mới, thay đổi nghiệp vụ, sửa lỗi phức tạp, đụng chạm schema/DB, đa module hoặc luồng rủi ro cao:
 ```
 [BƯỚC 1: SOẠN BATCH PROMPT]  ──▶  [BƯỚC 2: SESSION ĐIỀU TRA]  ──▶  [BƯỚC 3: SESSION THỰC THI]
-  Tạo 1 file prompt tập trung      Trace code, đánh giá Spec Impact     Kiểm tra approved -> Sửa spec
-  tại docs/tasks/<request>.md       Xuất task-N-fix.md (status: draft)   Sửa code phẫu thuật -> Run fitness
-  Không sửa code sớm.              Dev duyệt -> status: approved        Conditional Commit trên task branch
+  Tạo 1 file prompt tập trung      Trace code, đánh giá Spec Impact     Kiểm tra approval -> Sửa spec
+  tại docs/tasks/<request>.md       Xuất plan (approval: pending)       Sửa code phẫu thuật -> Run fitness
+  Không sửa code sớm.              Dev duyệt revision -> approved       Conditional Commit trên task branch
 ```
 
 ### B. Luồng Nhanh (Fast Track) & Rào Chắn Dừng Khẩn Cấp (Hard Stop)
@@ -104,6 +104,7 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
   - Viết bổ sung Unit test thuần túy không sửa logic runtime.
   - Task read-only: Giải thích kiến trúc, trace code, review logic.
 - **Chu trình Fast Track**: `Điều tra nhanh -> Sửa đổi -> Verify theo bảng áp dụng gate -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi cần lưu trữ)`.
+- **Căn cứ EXECUTE**: Fast Track cần yêu cầu trực tiếp của Developer với scope rõ và đủ điều kiện §3.B; không cần approved Standard plan riêng. Standard cần approval bao phủ revision/scope. Quyền mode/artifact tại [Agent Workflow](docs/operations/agent-workflow.md).
 - **RÀO CHẮN DỪNG KHẨN CẤP (FAST TRACK HARD STOP)**:
   > [!CAUTION]
   > Fast Track **lập tức vô hiệu lực** nếu phát sinh bất kỳ yếu tố nào sau đây (bắt buộc quay lại Quy trình Chuẩn 3 bước):
@@ -112,6 +113,8 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
   > 3. Thay đổi logic Authentication hoặc Authorization.
   > 4. Thay đổi logic nghiệp vụ (Business logic runtime).
   > 5. Chạm vào bất kỳ thành phần nào thuộc luồng **P0** hoặc **P1** (dựa trên blast radius).
+
+Hard Stop loại trừ Fast Track; checkpoint và quay về Standard trước phần sửa ngoài phạm vi. Nó không cấm Standard task đã duyệt sửa thành phần đó trong scope. Escalation tại §4 áp dụng riêng cho mọi track và dừng phần phụ thuộc quyết định còn mở.
 
 ---
 
@@ -134,23 +137,23 @@ AI Agent bắt buộc **DỪNG LẠI NGAY LẬP TỨC**, không tự ý đoán h
 6. **Irreversible Operations**: Thao tác xóa cột, drop table, purge cache diện rộng không thể rollback an toàn tức thì.
 7. **Architectural Trade-offs**: Phân vân kỹ thuật nền tảng (Queue vs Cron, Redis vs DB, Event-Driven vs Sync, chia module mới). Bắt buộc dừng lại, phân tích trade-offs và yêu cầu tạo ADR theo [docs/decisions/README.md](docs/decisions/README.md).
 
-Dừng ngay hành động phụ thuộc vào quyết định còn mở, báo Developer và ghi bằng chứng. Trong INVESTIGATE/READ_ONLY chỉ tiếp tục khảo sát độc lập khi an toàn; không tự chốt mâu thuẫn. Trong EXECUTE dừng sửa code theo [Agent Workflow](docs/operations/agent-workflow.md).
+Dừng ngay hành động phụ thuộc vào quyết định còn mở, báo Developer và ghi bằng chứng. Trong INVESTIGATE/READ_ONLY chỉ tiếp tục khảo sát độc lập khi an toàn; không tự chốt mâu thuẫn. Trong EXECUTE dừng phần phụ thuộc trigger, giữ diff/checkpoint theo [Agent Workflow](docs/operations/agent-workflow.md).
 
 ---
 
 ## 5. Tiêu Chuẩn Hoàn Tất (Definition of Done - DoD)
 
-Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp ứng **DoD profile tương ứng**:
+Execution chỉ completed (`execution_status: completed`) khi đạt **DoD profile tương ứng**. Approval/status semantics và transition ownership theo [Agent Workflow](docs/operations/agent-workflow.md):
 
 ### A. Standard DoD (Áp dụng cho Standard 3-Step Path)
-1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) đã được Developer duyệt (`status: approved`).
+1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) có approval record hợp lệ cho revision/scope hiện hành (`approval_status: approved`); agent không tự duyệt. Approval độc lập execution và được giữ khi completed.
 2. **Spec Synchronized**: Đặc tả nghiệp vụ (`docs/main_docs/<ACTIVE_VERSION>/fn/`) đã được cập nhật đồng bộ nếu có thay đổi hành vi (`Spec Impact: CHANGE/CLARIFICATION`).
 3. **Automated Tests Pass**: Các checks bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) và [ma trận kiểm thử](docs/standards/verification.md#risk-test-matrix) đã PASS; N/A có lý do được ghi rõ.
 4. **Architecture Fitness Pass**: Gate Standard theo [bảng áp dụng](#quality-gate-applicability) thực thi thành công với Exit code 0.
 5. **No Open Assumptions**: Toàn bộ giả định mở hoặc xung đột kiến trúc/nghiệp vụ đã được giải quyết triệt để.
 6. **Documentation & Memory Updated**: Đã cập nhật ADR (nếu chạm trigger), pitfalls/lessons (nếu phát hiện bẫy mới).
 7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), không sót file nhạy cảm hay file rác.
-8. **Evidence & Handoff**: Mỗi AC có kết quả và bằng chứng theo [Verification Standard](docs/standards/verification.md); hoàn tất kiểm tra bắt buộc, gồm kiểm tra thủ công nếu áp dụng. Bàn giao theo [Handoff Contract](docs/operations/handoff-contract.md). Không xem skipped/not run là PASS.
+8. **Evidence & Handoff**: Mỗi AC có kết quả và bằng chứng theo [Verification Standard](docs/standards/verification.md); hoàn tất kiểm tra bắt buộc, gồm independent review và kiểm tra thủ công khi áp dụng theo [Agent Workflow](docs/operations/agent-workflow.md). Bàn giao theo [Handoff Contract](docs/operations/handoff-contract.md). Không xem skipped/not run là PASS.
 
 ### B. Fast Track DoD (Áp dụng cho Fast Track Changes)
 1. **Scope Validity**: Phạm vi thay đổi vẫn nằm trọn vẹn trong các trường hợp cho phép của Fast Track.
@@ -163,7 +166,7 @@ Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp �
 8. **Evidence & Handoff**: Báo cáo kiểm tra và bằng chứng tương xứng phạm vi; không bỏ qua kiểm tra thủ công cần thiết chỉ vì dùng Fast Track.
 
 ### C. Phân Định Kết Quả Theo Vòng Đời Task (Lifecycle Outputs)
-- **Investigation Session**: Hoàn tất khi tài liệu phân tích `task-N-fix.md` hoặc `task-N-feat.md` được tạo với `status: draft`. Không yêu cầu commit code.
+- **Investigation Session**: Hoàn tất khi plan `task-N-fix.md` hoặc `task-N-feat.md` được tạo với `approval_status: pending`, `execution_status: not_started`. Không yêu cầu commit code; đây không phải execution completed.
 - **Execution Task**: Hoàn tất khi đáp ứng Standard DoD (hoặc Fast Track DoD tương ứng).
 - **Read-only Task**: Hoàn tất khi báo cáo, phân tích và bằng chứng xác minh đã được cung cấp (không tạo commit code).
 

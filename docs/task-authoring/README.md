@@ -23,18 +23,22 @@ Mẫu metadata tối thiểu; bỏ trường tùy chọn nếu không áp dụng
 
 ```yaml
 task_id: task-1
-status: draft
+approval_status: pending
+approved_by: null
+approved_at: null
+approved_revision: null
+execution_status: not_started
+closed_at: null
+merged_at: null
 critical_flow: P2
 risk_level: MEDIUM
 spec_impact: NONE
 depends_on: []
 created_by: <author>
-approved_by: null
-approved_at: null
 ```
 
 Spec Impact dùng thống nhất `NONE | CLARIFICATION | CHANGE | CONFLICT`. Risk dùng `TRIVIAL | LOW | MEDIUM | HIGH | CRITICAL`, tương ứng P4 đến P0; ghi mức cao nhất của blast radius.
 
-Plan cần: yêu cầu gốc/AC/spec active; root cause hoặc thiết kế có bằng chứng; scope và callers/contracts bị ảnh hưởng; thay đổi tối thiểu; test matrix và lệnh thật; compatibility/rollback khi cần; Open Issues nếu còn. Approval nhận diện nội dung plan được duyệt bằng revision hoặc bản ghi rõ ràng. Còn vấn đề cần quyết định thì giữ draft.
+Plan cần: yêu cầu gốc/AC/spec active; root cause hoặc thiết kế có bằng chứng; scope và callers/contracts bị ảnh hưởng; thay đổi tối thiểu; test matrix và lệnh thật; compatibility/rollback khi cần; Open Issues nếu còn. Approval độc lập execution, nhận diện nội dung được duyệt qua `approved_revision`; ghi người duyệt và timestamp có timezone, không suy đoán metadata. Còn Open Issues cần quyết định thì giữ `approval_status: pending`. Hai status trục cũ có mapping tại [Agent Workflow](../operations/agent-workflow.md#lifecycle-transitions).
 
 Không yêu cầu manifest JSON, hash, DAG scheduler hoặc pipeline riêng cho task thủ công. Mục tiêu là traceability đủ dùng.

@@ -46,18 +46,19 @@ Khi có một tính năng mới hoặc một danh sách lỗi cần sửa, bạn
                │
                ▼
 [BƯỚC 3: DUYỆT & THỰC THI (Execution)]
-- Dev xem lướt file fix -> Đổi metadata sang "status: approved" (hoặc đưa AI khác review)
+- Dev xem plan -> Ghi approval record cho revision/scope được duyệt
 - Mở Clean Session mới -> Chỉ thị: "Thực thi docs/tasks/<name>/task-N-fix.md"
 - AI cập nhật Spec -> Sửa Code phẫu thuật -> Chạy test & fitness -> Tự động Commit
 ```
 
 #### A. Khi Nào Dùng Luồng Nhanh (Fast Track)?
-Để không bị mệt mỏi vì thủ tục, bạn được dùng **Fast Track** (bỏ qua bước tạo task file và approval gate) khi thỏa mãn:
+Để không bị mệt mỏi vì thủ tục, bạn được dùng **Fast Track** (không cần task file/approved Standard plan riêng; cần yêu cầu trực tiếp của Developer với scope rõ) khi thỏa mãn:
 - Sửa lỗi chính tả (typo), cập nhật markdown, viết comment, format code.
 - Chỉnh sửa CSS thuần túy không đổi cấu trúc layout/DOM.
 - Viết bổ sung Unit test thuần túy không sửa logic runtime.
 - Task read-only: Giải thích kiến trúc, trace code, review logic.
 - **Quy trình Fast Track**: `Điều tra nhanh -> Sửa đổi -> Verify theo AGENTS §5.D -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi cần lưu trữ)`.
+- **Căn cứ EXECUTE**: Standard dùng approved plan đúng revision/scope; Fast Track dùng yêu cầu trực tiếp, rõ scope của Developer khi đủ điều kiện AGENTS §3.B. Mode permission tại [Agent Workflow](operations/agent-workflow.md).
 
 #### B. Quy Tắc Vàng Về Git & Cam Kết Có Điều Kiện:
 Theo [AGENTS §2.C](../AGENTS.md), dùng branch task hợp lệ và giữ nguyên baseline. Index chỉ chứa thay đổi task, các gate bắt buộc theo [§5.D](../AGENTS.md#quality-gate-applicability) đã PASS, không còn giả định mở; sau commit không còn thay đổi task chưa xử lý. Baseline được ghi nhận có thể vẫn còn trong working tree. Điều kiện đầy đủ và quyền Git thuộc AGENTS; tài liệu này chỉ hướng dẫn. Task read-only/investigation thuần túy không commit code.
@@ -88,7 +89,7 @@ Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời c
 
 # PHẦN 2: DÀNH CHO AI AGENT (COLD-START BOOTSTRAP PROTOCOL)
 
-Lõi quy trình dùng chung gồm [Agent Workflow](operations/agent-workflow.md), [Task Authoring](task-authoring/README.md), [Verification Standard](standards/verification.md) và [Handoff Contract](operations/handoff-contract.md). Nhận diện mode trước thao tác; không tự duyệt plan, chuyển mode hoặc coi skipped/manual pending là PASS.
+Lõi quy trình dùng chung gồm [Agent Workflow](operations/agent-workflow.md), [Task Authoring](task-authoring/README.md), [Verification Standard](standards/verification.md) và [Handoff Contract](operations/handoff-contract.md). Workflow sở hữu permission, approval/execution lifecycle, cold-start và reviewer independence; các entry points này dẫn tới định nghĩa thay vì chép transitions. Nhận diện mode trước thao tác; không tự duyệt plan, chuyển mode hoặc coi skipped/manual pending là PASS.
 
 Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/project-adoption.md). Xác minh stack, scripts, CI và tài liệu hiện có trước tạo/cập nhật; không ghi đè baseline. Tạo project profile với commands tương đương và sources of truth thực tế. Các đường dẫn `src/`, Node.js và npm dưới đây là mẫu tham chiếu, cần điều chỉnh theo stack.
 

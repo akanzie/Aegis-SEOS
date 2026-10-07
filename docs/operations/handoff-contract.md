@@ -10,7 +10,7 @@ Bàn giao có độ dài tương xứng thay đổi. Task nhỏ chỉ cần tóm
 2. **Revision & Baseline**: Branch, HEAD/revision được kiểm tra, baseline giữ nguyên; với PR ghi source/target SHA và phạm vi diff.
 3. **AC Evidence**: AC -> hành vi -> check -> kết quả -> bằng chứng, theo verification.md.
 4. **Reviewer Attention**: Vị trí và lý do cần xem kỹ (nghiệp vụ, security, schema, contracts, fallback); không tuyên bố máy đã chứng minh UI hoặc mọi security invariant.
-5. **Open Items & Recovery**: Findings còn mở, manual checks, rủi ro/giới hạn và rollback khi áp dụng. Ghi trạng thái thật: completed, pending verification, blocked hoặc ready for review; ready for review không đồng nghĩa merge-ready.
+5. **Open Items & Recovery**: Findings còn mở, manual checks, rủi ro/giới hạn và rollback khi áp dụng. Ghi riêng `approval_status`/approval revision và `execution_status`; ready for review là nhãn bàn giao, không phải lifecycle state hay merge-ready.
 6. **Next Authority**: Bước tiếp theo và chủ thể có quyền approve/merge/deploy. Kết luận merge-ready chỉ sau Merge Review Gate đạt trên đúng source/target SHA.
 
 ```markdown
@@ -19,4 +19,4 @@ Bàn giao có độ dài tương xứng thay đổi. Task nhỏ chỉ cần tóm
 | AC-1 | <observable outcome> | <test/check/manual> | <actual status> | <location/revision> |
 ```
 
-Thông tin bàn giao không chứa secrets, auth headers hoặc PII thô. Session chưa hoàn tất cần lưu checkpoint trong task với bước đã làm, bằng chứng, blocker và bước tiếp theo; không thay plan approved âm thầm.
+Thông tin bàn giao không chứa secrets, auth headers hoặc PII thô. Session chưa hoàn tất cần lưu checkpoint trong task với bước đã làm, bằng chứng, blocker và bước tiếp theo; không thay plan approved âm thầm. Reviewer độc lập bắt buộc theo [decision table](agent-workflow.md#independent-review); ghi reviewer, scope và revision đã xem. Close order/timestamps theo [lifecycle contract](agent-workflow.md#close-sequence).
