@@ -28,4 +28,6 @@ Transition/actor/precondition canonical nằm trong [Agent Workflow](../operatio
 
 Đóng task theo [close sequence](../operations/agent-workflow.md): AC/gates/review/handoff sẵn sàng trước conditional commit; xác nhận completed và `closed_at` sau commit/post-commit checks. Không bắt buộc một commit duy nhất. Handoff ghi revision/SHA có thể trỏ commit chứa evidence.
 
+Retention clock, điều kiện archive theo request, và giữ request index/evidence links được quy định tại [Knowledge Lifecycle](../governance/knowledge-lifecycle.md). Trang này chỉ dẫn tới policy đó; `closed_at` là field của task lifecycle, còn `merged_at` chỉ ghi merge thật.
+
 Metadata cũ `status: draft | approved | completed` chỉ là compatibility shorthand; đối chiếu approval evidence/revision trước resume. Không tự migrate baseline metadata. Findings/rework truy vết theo ID, không âm thầm thay quyết định được duyệt.

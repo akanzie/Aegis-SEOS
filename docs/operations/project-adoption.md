@@ -4,6 +4,8 @@ Dùng [Project profile template](../templates/project-profile.md) khi tiếp nh�
 
 SEOS cung cấp lõi quy trình; project profile mô tả công nghệ và cách verify thực tế. Không đưa OpenClaw, framework, dịch vụ cloud hoặc luật nghiệp vụ riêng thành yêu cầu chung.
 
+Điểm vào theo phase/trigger dùng [AGENTS §10 routing map](../../AGENTS.md#routing-map). Dùng playbook này khi trigger là project mới hoặc adoption; không tạo routing map song song.
+
 ## 1. Khởi tạo hoặc tiếp nhận dự án
 
 - Khảo sát repository trước: stack, scripts, CI, spec active, system map, baseline và quy tắc hiện có. Không ghi đè tài liệu/code chỉ để khớp template.

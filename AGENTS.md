@@ -216,6 +216,8 @@ P0 bảo vệ system survival/security và core execution loop của hệ thốn
 
 ## 8. Quản Lý Ngân Sách Ngữ Cảnh & Context Packages (Context Budget)
 
+<a id="context-budget"></a>
+
 Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh gọn để chống ảo giác:
 
 | Mức Độ | Ngưỡng Token | Áp Dụng Cho |
@@ -223,7 +225,9 @@ Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh g
 | **Low** | <= 10k tokens | Fast Track, sửa typo, cập nhật docs, viết unit test đơn |
 | **Medium** | <= 30k tokens | Investigation session, phân tích 1 task độc lập, audit file |
 | **High** | <= 60k tokens | Execution session liên quan nhiều module, refactor tầng |
-| **Critical** | > 60k tokens | **Cảnh báo**: Cần ngắt session hoặc bẻ nhỏ task thành các sub-tasks |
+| **Overflow** | > 60k tokens | **Bắt buộc**: Dừng nạp context, ghi checkpoint, rồi chia nhỏ task hoặc tiếp tục trong session mới. Không cần approval riêng chỉ vì overflow. |
+
+Mức session là ngân sách theo phạm vi công việc; các hàng Low/Medium/High dùng ngưỡng trên làm giới hạn trên tương ứng. `Target Token Budget` trong Context Package là mục tiêu riêng (mặc định `<= 15,000` tokens), không phải hard cap cho session. Nếu vượt target, thu hẹp package/nạp theo nhu cầu; nếu session vượt 60k, áp dụng overflow action ở trên.
 
 **Quy Tắc Context Packages (`docs/context-packages/`):**
 - Trước khi thực hiện task, AI bắt buộc tìm và nạp Context Package tương ứng (ví dụ: `auth-context.md`).
@@ -236,33 +240,30 @@ Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh g
 
 Để ngăn ngừa việc sau 2-5 năm kho tri thức biến thành "bãi rác tài liệu" (Document Cemetery/Junkyard), toàn bộ dự án tuân thủ [docs/governance/knowledge-lifecycle.md](docs/governance/knowledge-lifecycle.md):
 
-1. **Completed Tasks (`docs/tasks/**`)**: Sau **6 tháng** hoàn thành -> chuyển vào `docs/archive/tasks/<YYYY>/`.
+1. **Task records (`docs/tasks/**`)**: Retention và điều kiện archive theo [`knowledge-lifecycle.md`](docs/governance/knowledge-lifecycle.md); dùng `closed_at`, giữ `merged_at` riêng và không archive request còn task chưa đủ điều kiện.
 2. **Resolved Incidents (`docs/engineering-incidents/**`)**: Sau **12 tháng** -> chắt lọc bài học vào `known-pitfalls.md` hoặc `technical-lessons.md` rồi chuyển vào `docs/archive/incidents/<YYYY>/`.
 3. **Superseded ADRs (`docs/decisions/**`)**: Không bao giờ xóa; cập nhật trạng thái `Superseded by ADR-XXXX` và trỏ link sang ADR mới.
 4. **Quy Tắc Cấm Nạp Archive (Zero-Archive In Context)**: AI Agent tuyệt đối **KHÔNG** được tự ý nạp tài liệu từ thư mục `docs/archive/**` vào context session trừ khi Developer yêu cầu tra cứu lịch sử cụ thể.
 
 ---
 
-## 10. Bản Đồ Tra Cứu Theo Nhu Cầu (On-Demand Routing Map)
+<a id="routing-map"></a>
+## 10. Bản Đồ Tra Cứu Theo Phase Và Trigger (On-Demand Routing Map)
 
-Khi cần tra cứu sâu, AI truy cập các điểm neo tương ứng (không nạp toàn bộ vào một lần):
+Đây là entry map duy nhất theo phase/trigger. Mở đúng owner cần thiết; không nạp toàn bộ tài liệu cùng lúc.
 
-| Lĩnh Vực | Nguồn Sự Thật Cần Tra Cứu |
+| Phase / trigger | Entry point / owner |
 | :--- | :--- |
-| **Cẩm Nang & Bootstrap** | [docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md) (Hướng dẫn toàn diện SEOS) |
-| **Mode, Approval, Review & Rework** | [docs/operations/agent-workflow.md](docs/operations/agent-workflow.md) |
-| **Soạn Yêu Cầu & Phân Rã Task** | [docs/task-authoring/README.md](docs/task-authoring/README.md) |
-| **Kiểm Chứng & Bằng Chứng AC** | [docs/standards/verification.md](docs/standards/verification.md) |
-| **Bàn Giao Task / PR** | [docs/operations/handoff-contract.md](docs/operations/handoff-contract.md) |
-| **Áp Dụng SEOS Cho Dự Án Mới / Có Sẵn** | [docs/operations/project-adoption.md](docs/operations/project-adoption.md) |
-| **10 Điều Bất Biến (One-Pager)**| [docs/operations/quick-checklist.md](docs/operations/quick-checklist.md) |
-| **Kiểm Định Trước Release** | [docs/operations/preflight-checklist.md](docs/operations/preflight-checklist.md) |
-| **Review PR/MR Trước Merge** | [Merge Review Gate: 10 câu hỏi bắt buộc](docs/operations/preflight-checklist.md#merge-review-gate) |
-| **Đặc Tả Nghiệp Vụ ("WHAT")** | `docs/main_docs/<ACTIVE_VERSION>/fn/*.md` |
-| **Ranh Giới Phân Tầng & Luồng Sống Còn** | `docs/system-map/modules.md`, `dependencies.md`, `critical-paths.md` |
-| **SOP Tác Chiến (Playbooks)** | `docs/playbooks/` (bug-investigation, feature-dev, db-migration, incident) |
-| **Máy Chấm Tự Động (Fitness)** | [docs/fitness-functions/architecture-rules.md](docs/fitness-functions/architecture-rules.md), [ci-enforcement.md](docs/fitness-functions/ci-enforcement.md) |
-| **Ký Ức Kỹ Thuật (Memory)** | `docs/project-memory/` (known-pitfalls, rejected-solutions, technical-lessons) |
-| **Quy Chuẩn Code & Tiêu Chuẩn Kỹ Thuật** | `docs/standards/` ([observability.md](docs/standards/observability.md), [performance.md](docs/standards/performance.md), README) |
-| **Quyết Định Kiến Trúc (ADR)** | [docs/decisions/README.md](docs/decisions/README.md) (Quy chế & 5 Mandatory Triggers) |
-| **Vòng Đời Tài Liệu (Governance)**| [docs/governance/knowledge-lifecycle.md](docs/governance/knowledge-lifecycle.md) |
+| New project / adoption / bootstrap | [Project Adoption](docs/operations/project-adoption.md); bootstrap instructions in [HOW_WE_WORK](docs/HOW_WE_WORK.md#ai-bootstrap) |
+| Human onboarding | [HOW_WE_WORK — Human Onboarding](docs/HOW_WE_WORK.md#human-onboarding) |
+| Session start, mode, approval, resume, review, rework | [Agent Workflow](docs/operations/agent-workflow.md) |
+| Compose request or investigate task | [Task Authoring](docs/task-authoring/README.md); artifact forms in [Templates](docs/templates/README.md) |
+| Execute / risk / gates / Git / safety | This contract, especially §§0–7; details by risk at [Critical Flows](docs/operations/critical-flows.md) and [Verification](docs/standards/verification.md) |
+| Verify AC, tests, or architecture fitness | [Verification Standard](docs/standards/verification.md); actual project commands in [Project Profile](docs/operations/project-profile.md) |
+| Handoff or merge review | [Handoff Contract](docs/operations/handoff-contract.md); [Preflight / Merge Review Gate](docs/operations/preflight-checklist.md#merge-review-gate) |
+| Production incident | [Production Incident Playbook](docs/playbooks/production-incident.md) and the approved-task/deploy boundaries it links |
+| Business behavior / technical boundary / ADR trigger | Active spec from `docs/main_docs/ACTIVE_VERSION.md`; system maps under `docs/system-map/`; [standards](docs/standards/); [ADR rules](docs/decisions/README.md) |
+| Context package, memory, or document retention | [`docs/context-packages/`](docs/context-packages/README.md); [`docs/project-memory/`](docs/project-memory/); [Knowledge Lifecycle](docs/governance/knowledge-lifecycle.md) |
+| Quick reference | [Quick Checklist](docs/operations/quick-checklist.md); it points to canonical policy owners |
+
+README and HOW_WE_WORK introduce this map and onboarding/bootstrap; they do not define a second routing map.

@@ -10,13 +10,14 @@
 ## 🌟 Tính Năng & Rào Chắn Nổi Bật
 
 - **[Hiến pháp Tối cao](AGENTS.md)**: Bản thỏa ước vận hành chuẩn mực (Unified Operating Contract) cho cả Developer và AI Agent, xác lập thứ bậc nguồn sự thật (Hierarchy of Truth) và các ranh giới bất biến.
+- **Bắt đầu theo phase/trigger**: Dùng [AGENTS §10 routing map](AGENTS.md#routing-map) để tới đúng tài liệu owner. [HOW_WE_WORK](docs/HOW_WE_WORK.md) tách riêng human onboarding và bootstrap khi được yêu cầu.
 - **[Máy Chấm Ranh Giới Tự Động](docs/fitness-functions/architecture-rules.md)**: Xác thực các luật Machine-enforced qua `npm run test:fitness` — ngăn chặn sớm việc vi phạm tính thuần khiết của tầng Domain, rò rỉ server secrets sang Client components, hoặc gọi trực tiếp biến môi trường không qua schema.
-- **[Ngăn Ngừa Ảo Giác Với Context Packages](docs/context-packages/README.md)**: Gói ngữ cảnh thiết kế tinh gọn theo từng task (khuyến nghị <= 15k tokens); toàn bộ Investigation Session duy trì trong ngưỡng an toàn (<= 30k tokens).
+- **[Ngăn Ngừa Ảo Giác Với Context Packages](docs/context-packages/README.md)**: Package có target riêng; session budget và overflow action theo [AGENTS §8](AGENTS.md#context-budget).
 - **Phân Tách Definition of Done (DoD)**:
   - **Standard DoD**: Áp dụng cho Standard 3-Step Path đối với tính năng mới, thay đổi nghiệp vụ, sửa lỗi phức tạp hoặc can thiệp schema.
   - **Fast Track DoD**: Luồng xử lý tinh gọn cho tài liệu, sửa lỗi chính tả (typo), CSS thuần không đổi layout tree, hoặc bổ sung unit test độc lập.
 - **[Phân Cấp Luồng Sống Còn](docs/operations/critical-flows.md)**: Phân tầng rõ rệt từ P0 (System Survival) đến P4 (Nice to have), kích hoạt mức độ nhạy cảm tự động dựa trên bán kính tác động (Impact-based risk / Blast Radius).
-- **[Quản Lý Vòng Đời Tri Thức](docs/governance/knowledge-lifecycle.md)**: Quy định chu kỳ rà soát, dọn dẹp và lưu trữ (Retention & Archive) Task files, Incidents và ADRs sau 6–12 tháng nhằm giữ kho tài liệu luôn gọn gàng, chống quá tải token.
+- **[Quản Lý Vòng Đời Tri Thức](docs/governance/knowledge-lifecycle.md)**: Nguồn canonical về retention, archive và truy vết evidence cho task records, incidents và ADRs.
 
 ---
 
@@ -75,7 +76,7 @@ Theo [AGENTS §2.C](AGENTS.md), làm việc trên branch `task/*`, `feat/*`, `fi
 ├── package.json                         # Scripts kiểm tra và cấu hình dự án
 ├── docs/
 │   ├── HOW_WE_WORK.md                   # Cẩm nang toàn diện: Onboarding & Bootstrap
-│   ├── context-packages/                # First-Class Context Packages (< 15k tokens)
+│   ├── context-packages/                # Context packages; budget policy is linked from AGENTS §8
 │   ├── operations/
 │   │   ├── critical-flows.md            # Taxonomy canonical P0–P4 và blast radius
 │   │   ├── quick-checklist.md           # One-Pager: 9 ranh giới, verification gate & DoD

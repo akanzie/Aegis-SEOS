@@ -42,32 +42,9 @@ Khi nhận yêu cầu review hoặc merge PR/MR, phải trả lời đủ 10 câ
 - Khi gặp escalation trigger trong `AGENTS.md`, dừng và báo Developer. Findings phải ghi mức độ, vị trí, tác động và hướng xử lý; không tự ý sửa nghiệp vụ để làm review pass.
 - Kết luận chỉ có hiệu lực cho cặp source/target SHA đã review. Nếu một trong hai thay đổi, cập nhật diff, kiểm tra lại phần bị ảnh hưởng và bằng chứng liên quan trước khi merge. Review đạt không thay thế yêu cầu rõ ràng của Developer cho thao tác merge hoặc push.
 
-### Mẫu Báo Cáo Review
+### Báo Cáo Review
 
-```markdown
-PR/MR hoặc source branch: ...
-Target branch: ...
-Source SHA / target SHA / merge-base: ...
-Ticket / approved task / spec / AC: ...
-Scope, baseline và risk level: ...
-
-| # | Trạng thái | Trả lời và bằng chứng | Vấn đề / bước tiếp theo |
-| :--- | :--- | :--- | :--- |
-| 1 | ... | ... | ... |
-| 2 | ... | ... | ... |
-| 3 | ... | ... | ... |
-| 4 | ... | ... | ... |
-| 5 | ... | ... | ... |
-| 6 | ... | ... | ... |
-| 7 | ... | ... | ... |
-| 8 | ... | ... | ... |
-| 9 | ... | ... | ... |
-| 10 | ... | ... | ... |
-
-Verification: lệnh, exit code, local/CI, commit, manual smoke test hoặc N/A có lý do.
-Findings/blockers: mức độ, vị trí, tác động và hướng xử lý.
-Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
-```
+Dùng [Review template](../templates/review.md), là mẫu đầy đủ duy nhất. Báo cáo cần ghi source/target SHA, merge-base, nguồn nghiệm thu, scope/risk, kết quả và evidence cho đủ 10 câu, verification, findings/blockers và kết luận merge eligibility. Checklist này quy định gate; template giữ cấu trúc artifact.
 
 ---
 

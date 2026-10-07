@@ -24,6 +24,7 @@ Developer và AI Agent **bắt buộc phải tạo ADR** trước khi bắt tay 
 
 ---
 
+<a id="adr-lifecycle"></a>
 ## 2. Định Dạng Đặt Tên & Vòng Đời Quyết Định (Lifecycle & Ownership)
 
 - **Định dạng file**: `ADR-XXXX-<slug-tieu-de>.md` (ví dụ: `ADR-0001-drizzle-orm-adoption.md`).
@@ -34,32 +35,6 @@ Developer và AI Agent **bắt buộc phải tạo ADR** trước khi bắt tay 
 
 ---
 
-## 3. Mẫu ADR Chuẩn
+## 3. Nội Dung ADR
 
-```markdown
----
-adr_id: ADR-XXXX
-title: "[Tiêu Đề Quyết Định]"
-status: proposed # [proposed | accepted | superseded | deprecated]
-decision_owner: "@username"
-date: YYYY-MM-DD
-supersedes: null # hoặc "ADR-YYYY"
-superseded_by: null # hoặc "ADR-ZZZZ"
----
-
-# ADR-XXXX: [Tiêu Đề Quyết Định]
-
-- **Trạng thái**: Proposed | Accepted | Deprecated | Superseded
-- **Chủ trì quyết định (Owner)**: @username
-- **Ngày**: YYYY-MM-DD
-
-## Bối Cảnh (Context)
-Vấn đề chúng ta đang gặp phải là gì? Những yếu tố và ràng buộc nào thúc đẩy quyết định này?
-
-## Quyết Định (Decision)
-Chúng ta quyết định chọn giải pháp nào và triển khai ra sao?
-
-## Đánh Đổi & Hệ Quả (Consequences & Trade-offs)
-- **Tích cực (Pros)**: Lợi ích đạt được về kiến trúc, hiệu năng hoặc vận hành.
-- **Đánh đổi / Rủi ro (Cons)**: Chi phí bảo trì, độ phức tạp phát sinh, lộ trình di trú.
-```
+Dùng [ADR template đầy đủ](../templates/adr.md) để tạo record. ADR cần ghi context/bằng chứng, options và quyết định được owner chấp thuận, consequences/recovery, ownership và lifecycle fields. Phần mô tả này là hướng dẫn, không phải template thay thế.

@@ -4,12 +4,11 @@
 > **Tuyên ngôn cốt lõi:**  
 > *"Tài liệu là hệ điều hành (Docs-as-an-OS), Code là kết quả phái sinh, Session AI là tiến trình độc lập và dùng một lần (Disposable Process)."*
 
-Tài liệu này phục vụ **2 mục đích song song**:
-1. **Dành cho Người mới (Developer Onboarding)**: Đọc 10 phút là hiểu toàn bộ văn hóa kỹ thuật, quy trình làm việc hàng ngày, cách ra lệnh cho AI mà không gây nợ kỹ thuật và không bị ảo giác.
-2. **Dành cho AI Agent (Cold-Start Bootstrap Protocol)**: Khi sang một dự án mới hoàn toàn, Developer chỉ cần đưa file này cho AI và ra lệnh: *"Khởi tạo hệ thống theo tài liệu này"*, AI sẽ khởi tạo bộ khung theo tài liệu này và chủ động làm rõ các điểm mơ hồ (`surface any ambiguity`) để thống nhất trước khi đào sâu triển khai.
+Tài liệu chia rõ hai phần: **Human Onboarding** hướng dẫn Developer làm việc hàng ngày; **AI Bootstrap** chỉ áp dụng khi Developer yêu cầu khởi tạo SEOS cho repository mới. Dùng [AGENTS §10 routing map](../AGENTS.md#routing-map) để chọn entry point theo phase/trigger; HOW_WE_WORK không tạo routing map riêng.
 
 ---
 
+<a id="human-onboarding"></a>
 # PHẦN 1: DÀNH CHO CON NGƯỜI (HUMAN ONBOARDING)
 
 Nếu bạn là Developer mới tham gia dự án hoặc bắt đầu áp dụng mô hình này: **Chào mừng bạn đến với kỷ nguyên phát triển phần mềm AI-Native có kỷ luật.**
@@ -20,7 +19,7 @@ Nếu bạn là Developer mới tham gia dự án hoặc bắt đầu áp dụng
 | :--- | :--- | :--- |
 | **Bản chất cuộc chat** | Trò chuyện dài vô tận, code dở dang tích lũy trong chat | Mỗi session chat là 1 tiến trình độc lập, xong task là đóng session |
 | **Nguồn sự thật** | Nằm trong đầu Dev hoặc trôi nổi trong lịch sử chat | Lưu trên đĩa (`docs/main_docs/fn/`, `system-map/`, `project-memory/`) |
-| **Chi phí token** | Phình to theo thời gian, AI bắt đầu quên và sinh ảo giác | Tối ưu tuyệt đối theo **Context Packages** (< 30k tokens/session) |
+| **Chi phí token** | Phình to theo thời gian, AI bắt đầu quên và sinh ảo giác | Dùng package target và session budget/overflow theo [AGENTS §8](../AGENTS.md#context-budget) |
 | **Bảo vệ kiến trúc** | Trông chờ vào trí nhớ của Dev hoặc AI | **Máy chấm tự động** (`npm run test:fitness` fail ngay nếu vi phạm) |
 | **Nghiệp vụ vs Code** | Code đổi nhưng spec không đổi, sinh hàng tá bug ngầm | Bắt buộc đánh giá **Spec Impact** (`NONE/CLARIFICATION/CHANGE/CONFLICT`) |
 
@@ -77,7 +76,7 @@ Sau Conditional Commit và trước khi kết luận nhánh có thể merge vào
 
 ---
 
-### 3. Nguyên Tắc "Spec Impact Assessment" (Trái Tim Nghiệp Vụ)
+### 3. Đánh Giá Spec Impact
 
 Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời câu hỏi: **"Sửa đổi này tác động gì đến tài liệu đặc tả nghiệp vụ?"**:
 1. **`NONE`**: Code đang chạy sai so với spec chuẩn -> Sửa code, giữ nguyên spec.
@@ -87,7 +86,10 @@ Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời c
 
 ---
 
-# PHẦN 2: DÀNH CHO AI AGENT (COLD-START BOOTSTRAP PROTOCOL)
+<a id="ai-bootstrap"></a>
+# PHẦN 2: DÀNH CHO AI AGENT KHI DEVELOPER YÊU CẦU BOOTSTRAP
+
+Phần này không phải hướng dẫn onboarding thường ngày. Dùng khi Developer yêu cầu tạo/tiếp nhận SEOS trên repository mới; với session trong repository đang hoạt động, theo cold-start/resume tại [Agent Workflow](operations/agent-workflow.md).
 
 Lõi quy trình dùng chung gồm [Agent Workflow](operations/agent-workflow.md), [Task Authoring](task-authoring/README.md), [Verification Standard](standards/verification.md) và [Handoff Contract](operations/handoff-contract.md). Workflow sở hữu permission, approval/execution lifecycle, cold-start và reviewer independence; các entry points này dẫn tới định nghĩa thay vì chép transitions. Nhận diện mode trước thao tác; không tự duyệt plan, chuyển mode hoặc coi skipped/manual pending là PASS.
 
@@ -160,7 +162,7 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
 #### A. `AGENTS.md` (Root Contract)
 - Dẫn [hierarchy canonical tại AGENTS §0](../AGENTS.md): Approved task quyết định scope/AC, Accepted ADR quyết định Technical HOW còn hiệu lực; system map/technical architecture là tài liệu dẫn xuất, profile chỉ ánh xạ capability. Không tạo hierarchy rút gọn có authority riêng.
 - Khai báo quy chuẩn Git an toàn: Cấm commit lên `main`, tự tạo branch theo task (`task/*`, `feat/*`, `fix/*`, `hotfix/*`), bảo toàn baseline, cấm tự ý `push`/`reset --hard`.
-- Khai báo Token Budget: Low (<= 10k), Medium (<= 30k), High (<= 60k), Critical (Cần duyệt).
+- Dẫn tới [AGENTS §8](../AGENTS.md#context-budget) cho session budget, package target và overflow action; không sao chép ngưỡng.
 - Khai báo 2 luồng: Fast Track (Fast Track DoD) và Standard 3-Step Path (Standard DoD).
 
 #### B. `docs/operations/quick-checklist.md` (10 Điều Bất Biến & Split DoD)
@@ -189,11 +191,11 @@ User/tenant queries phải dùng identity/quyền server xác thực; public/mas
   - **Must Load**: Danh sách files tài liệu & interfaces bắt buộc nạp.
   - **Optional**: Files chỉ nạp khi cần đào sâu edge cases.
   - **Do Not Load**: Danh sách các module cấm nạp (ngăn ngừa phình token & ảo giác).
-  - **Token Budget**: Ngưỡng token trần cho package (thường `<= 15.000 tokens`).
+  - **Target Token Budget**: Mục tiêu riêng cho package; session budgets và overflow action theo [AGENTS §8](../AGENTS.md#context-budget).
 
 #### F. `docs/governance/knowledge-lifecycle.md` (Chống Biến Thành "Project Junkyard")
 - Quy tắc lưu trữ và dọn dẹp tài liệu theo thời gian:
-  - **Task files (`docs/tasks/**`)**: Sau 6 tháng đóng task -> di chuyển vào `archive/`.
+  - **Task records (`docs/tasks/**`)**: Dẫn tới [Knowledge Lifecycle](governance/knowledge-lifecycle.md) về `closed_at`, retention, archive eligibility và request index.
   - **Incidents (`docs/engineering-incidents/**`)**: Sau 12 tháng -> tổng hợp bài học vào `technical-lessons.md` rồi archive.
   - **ADRs (`docs/decisions/**`)**: Khi bị thay thế bởi quyết định mới -> đổi trạng thái sang `Superseded` và liên kết sang ADR mới.
 

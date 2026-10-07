@@ -37,8 +37,20 @@ depends_on: []
 created_by: <author>
 ```
 
-Spec Impact dùng thống nhất `NONE | CLARIFICATION | CHANGE | CONFLICT`. Risk dùng `TRIVIAL | LOW | MEDIUM | HIGH | CRITICAL`, tương ứng P4 đến P0; ghi mức cao nhất của blast radius.
+Risk dùng `TRIVIAL | LOW | MEDIUM | HIGH | CRITICAL`, tương ứng P4 đến P0; ghi mức cao nhất của blast radius.
 
 Plan cần: yêu cầu gốc/AC/spec active; root cause hoặc thiết kế có bằng chứng; scope và callers/contracts bị ảnh hưởng; thay đổi tối thiểu; test matrix và lệnh thật; compatibility/rollback khi cần; Open Issues nếu còn. Approval độc lập execution, nhận diện nội dung được duyệt qua `approved_revision`; ghi người duyệt và timestamp có timezone, không suy đoán metadata. Còn Open Issues cần quyết định thì giữ `approval_status: pending`. Hai status trục cũ có mapping tại [Agent Workflow](../operations/agent-workflow.md#lifecycle-transitions).
 
 Không yêu cầu manifest JSON, hash, DAG scheduler hoặc pipeline riêng cho task thủ công. Mục tiêu là traceability đủ dùng.
+
+<a id="spec-impact"></a>
+## Spec Impact
+
+Dùng đúng một giá trị và phân loại theo business contract đã được xác nhận:
+
+- **`NONE`**: Task không thay đổi business behavior/contract đã cam kết. Ghi rõ lý do; ví dụ, sửa lỗi triển khai để khớp spec hiện hành.
+- **`CLARIFICATION`**: Behavior hiện có đã được xác nhận là đúng, nhưng spec chưa diễn đạt rõ một edge case; cập nhật spec để mô tả behavior đó mà không đổi behavior.
+- **`CHANGE`**: Yêu cầu làm thay đổi business behavior/contract; cập nhật spec theo approval trước hoặc cùng implementation.
+- **`CONFLICT`**: Spec mâu thuẫn với behavior/requirement cần thiết; dừng phần phụ thuộc và yêu cầu Developer quyết định trước khi sửa.
+
+Thiếu mô tả hoặc chưa xác nhận behavior không tự đủ căn cứ cho `CLARIFICATION`; giữ câu hỏi trong Open Issues. Đây là định nghĩa canonical cho task plans và SOP.
