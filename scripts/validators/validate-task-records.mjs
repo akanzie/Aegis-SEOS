@@ -185,7 +185,7 @@ function rowCovers(row, id) {
 
 function validateCompletedEvidence(acIds, verificationPart, content, filename, errors) {
   const lines = verificationPart.split(/\r?\n/).filter((line) => /^\s*\|/.test(line));
-  const headerIndex = lines.findIndex((line) => /\bResult\b/i.test(line) && /\bEvidence\b/i.test(line));
+  const headerIndex = lines.findIndex((line) => /\bResult\b|Kết quả/i.test(line) && /\bEvidence\b|Bằng chứng/i.test(line));
   if (headerIndex < 0) {
     errors.push('completed task requires a result and evidence/revision verification table');
     return;

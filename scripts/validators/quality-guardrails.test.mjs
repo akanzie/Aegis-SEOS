@@ -93,6 +93,8 @@ Scope is bounded.
 
   test('Completed task requires actual PASS/N/A, evidence, and a checked revision', () => {
     assert.deepEqual(validateTaskRecord(completedTask), []);
+    const localizedHeaders = completedTask.replace('| AC | Scenario | Check | Result | Evidence / revision |', '| AC | Scenario | Check | Kết quả | Bằng chứng / revision |');
+    assert.deepEqual(validateTaskRecord(localizedHeaders), []);
     assert.deepEqual(validateTaskRecord(completedTask.replace('| PASS | test result @ abcdef0123456789 |', '| N/A | Not applicable for this task; reviewed @ abcdef0123456789 |')), []);
     assert.ok(validateTaskRecord(completedTask.replace('| PASS |', '| NOT_RUN |')).some((error) => /must be PASS or policy-permitted N\/A/.test(error)));
     assert.ok(validateTaskRecord(completedTask.replace('test result @ abcdef0123456789', '')).some((error) => /requires evidence/.test(error)));
