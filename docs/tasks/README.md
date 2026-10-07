@@ -6,6 +6,8 @@ Thư mục này là trung tâm điều phối các yêu cầu công việc, batc
 
 Soạn prompt/plan theo [Task Authoring](../task-authoring/README.md); quyền từng phase theo [Agent Workflow](../operations/agent-workflow.md). Quy tắc áp dụng cho cả `task-N-fix.md` và `task-N-feat.md`.
 
+Mỗi request folder là namespace ID riêng: `task_id` duy nhất trong folder và `depends_on` chỉ trỏ task cùng folder. Task record giữ owner, write scope, branch/worktree, dependency và checkpoint canonical; readiness, điều phối song song/tuần tự và checkpoint theo các owner tại [Agent Workflow](../operations/agent-workflow.md) và [Task Lifecycle](../operations/task-lifecycle.md#dependency-readiness-and-checkpoints). Không sao chép status/checkpoint vào index này.
+
 ## Cấu Trúc Khuyến Nghị
 ```
 docs/tasks/

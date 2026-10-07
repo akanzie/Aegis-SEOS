@@ -34,7 +34,15 @@ Fast Track exclusion tại AGENTS §3.B làm mất quyền dùng Fast Track: che
 5. Đọc project profile, ACTIVE_VERSION/spec/package, boundaries và memory liên quan; nếu thiếu package ghi rõ và đọc tối thiểu theo AGENTS §8; không nạp archive/package ngoại vi.
 6. Kiểm tra AC, lệnh verification, gates và reviewer độc lập khi áp dụng.
 7. Resume: so checkpoint với branch/HEAD/diff, approval, dependencies, checks và findings; evidence cũ bị ảnh hưởng cần verify lại. Ghi next action/authority.
+8. Nếu gặp giả định/mơ hồ cần quyết định hoặc finding ngoài scope: ghi evidence, impact và owner trong Open Issues/checkpoint của task; giữ nguyên scope đã duyệt, hỏi authority hoặc escalate theo AGENTS §4. Không tự quyết hoặc triển khai phần phụ thuộc quyết định còn mở.
 
+
+### Điều phối task và tài nguyên
+
+- Request folder là namespace của `task_id` và `depends_on`; mỗi ID duy nhất trong folder đó. Trước khi giao task, ghi owner chịu trách nhiệm, write scope (đường dẫn/tài nguyên được phép sửa), branch và worktree trong task record.
+- Dependency chỉ cho phép bắt đầu khi thỏa readiness tại [Task Lifecycle](task-lifecycle.md#dependency-readiness-and-checkpoints): approval còn bao revision/contract được dùng, execution đã `completed`, và output/evidence được link tới revision đó. Thiếu hoặc lệch điều kiện nào thì dừng task phụ thuộc và báo authority; không suy từ status riêng lẻ.
+- Chạy song song chỉ khi mỗi task có worktree riêng và write scope/tài nguyên không xung đột. Nếu dùng chung checkout hoặc tài nguyên ghi chung, chạy tuần tự. Không để nhiều owner ghi vào cùng checkout.
+- Task có thể qua nhiều session. Kết thúc session tại checkpoint có ý nghĩa và cập nhật task record; không tạo handoff riêng cho mỗi bước nhỏ. Handoff session chỉ trỏ checkpoint hiện hành và bổ sung finding/evidence mới theo [Handoff Contract](handoff-contract.md).
 
 ## 3. Handoff giữa các session
 

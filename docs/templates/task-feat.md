@@ -12,6 +12,10 @@ depends_on: []
 created_by: "[author]"
 approved_by: null
 approved_at: null
+owner: "[responsible person]"
+write_scope: ["[paths or shared resources this task may modify]"]
+branch: "[task branch]"
+worktree: "[worktree path or shared checkout; shared resources require sequential execution]"
 ---
 
 # Task N: Thêm [Kết quả nghiệp vụ]
@@ -45,6 +49,7 @@ Task cần ít nhất một AC hoàn chỉnh, không còn placeholder, và verif
 - Compatibility / rollout / recovery: [Ảnh hưởng contracts, dữ liệu; migration nếu áp dụng].
 - ADR / memory: [Trigger hoặc N/A có lý do].
 - Dependencies: [Task/contract tiền đề đã xác nhận; không có chu trình].
+- Ownership / resources: `owner` chịu trách nhiệm; `write_scope` liệt kê đường dẫn/tài nguyên được sửa; ghi branch và worktree. Task dùng chung checkout/tài nguyên ghi phải chạy tuần tự; chạy song song cần worktree riêng và scope không xung đột.
 
 ## 4. Verification Matrix
 
@@ -63,6 +68,7 @@ Ghi PASS / FAIL / SKIPPED / NOT_RUN / BLOCKED / N/A có lý do. Manual checks gh
 
 - Plan revision được duyệt (`approved_revision`): [Revision hoặc bản ghi nhận diện nội dung].
 - Approval evidence: [Developer hoặc reviewer được ủy quyền, timestamp có timezone, nguồn approval].
+- Dependency readiness: [Mỗi dependency phải có approval còn bao revision/contract, `execution_status: completed`, và output/evidence link tới revision đó; ghi N/A nếu không có dependency].
 - Chỉ đặt `approval_status: approved` sau approval rõ ràng đúng revision và giải quyết vấn đề cần quyết định; thay scope/risk/contracts/nghiệp vụ cần duyệt delta trước execution phụ thuộc. `execution_status` độc lập.
 
 ## 6. Execution Checkpoint / Handoff
@@ -77,6 +83,7 @@ Ghi PASS / FAIL / SKIPPED / NOT_RUN / BLOCKED / N/A có lý do. Manual checks gh
 
 - Đã làm / checks đã chạy / findings còn mở: [Trạng thái thật và bằng chứng].
 - Branch / revision / staged scope / conditional commit: [Thông tin đã xác minh].
+- Current checkpoint: [HEAD/diff, việc đã làm, evidence/findings, blocker, next action và authority; cập nhật task record tại checkpoint có ý nghĩa].
 - DoD / bước tiếp theo / authority: [Pending items; link handoff khi cần].
 - Chỉ chuyển `execution_status: completed` khi đạt Standard DoD, lifecycle review và close sequence.
 - Self-review trước handoff: AC/evidence khớp revision; không xóa/skip tests, dùng `.only`, giảm discovery/coverage, thêm exclusion/suppression không hỗ trợ hoặc fallback âm thầm; ghi scope và replacement evidence cho ngoại lệ đã duyệt.
