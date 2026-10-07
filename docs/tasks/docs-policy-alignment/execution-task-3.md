@@ -9,8 +9,8 @@ approval_status: approved
 approved_by: Developer (chat confirmation)
 approved_at: 2026-10-07T11:47:36+07:00
 approved_revision: E1F58A6B98BFD59E82A0011E9F910AEF3BDF41549484ACF5C379AE1F6E3B4318
-execution_status: pending_verification
-closed_at: null
+execution_status: completed
+closed_at: 2026-10-07T11:56:03+07:00
 merged_at: null
 ---
 
@@ -62,6 +62,7 @@ Remote CI/branch protection remains UNVERIFIED per project profile. No runtime i
 
 ## 5. Handoff
 
-- Implementation, local gates and independent review are complete. Keep `execution_status: pending_verification` until conditional commit and post-commit checks are complete.
+- Implementation, local gates, independent review, conditional commit and post-commit checks are complete.
 - Conditional commit scope: the 17 changed policy documents plus this execution report. The six pre-existing untracked request artifacts are baseline and remain outside the index.
+- Implementation commit: `6fd68154368275bf043b62ff5cae969aec48697c` (`docs: align policy references and context routing`). Completion metadata is recorded in a follow-up commit.
 - No push, merge or deploy is authorized by this handoff.
