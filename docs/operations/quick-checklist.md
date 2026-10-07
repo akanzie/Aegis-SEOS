@@ -52,7 +52,8 @@ Một task chỉ được coi là hoàn tất khi đáp ứng **DoD profile tư�
 - [ ] 4. **Architecture Fitness Pass**: `npm run test:fitness` PASS với Exit code 0.
 - [ ] 5. **No Open Assumptions**: Không còn giả định mở hay xung đột chưa giải quyết.
 - [ ] 6. **Documentation & Memory**: Đã cập nhật ADR (nếu chạm trigger) và lessons/pitfalls (nếu phát hiện bẫy mới).
-- [ ] 7. **Clean Conditional Commit**: Commit trên branch hợp lệ (`task/*`, `feat/*`, `fix/*`, `hotfix/*`), working tree chỉ chứa thay đổi in-scope trước khi commit và sạch hoàn toàn sau khi commit.
+- [ ] 7. **Clean Conditional Commit**: Commit trên branch hợp lệ (`task/*`, `feat/*`, `fix/*`, `hotfix/*`); index chỉ có thay đổi task, baseline giữ nguyên, không còn thay đổi task sau commit.
+- [ ] 8. **Evidence & Handoff**: AC có bằng chứng đúng revision; manual checks bắt buộc đã hoàn tất; bàn giao theo handoff-contract.md.
 
 ### B. Fast Track DoD (Cho Thay Đổi Nhanh / An Toàn)
 - [ ] 1. **Scope Validity**: Thuộc phạm vi Fast Track (typo, markdown, comments, formatting, CSS thuần, test thuần).
@@ -62,3 +63,4 @@ Một task chỉ được coi là hoàn tất khi đáp ứng **DoD profile tư�
 - [ ] 5. **Architecture Fitness Pass**: `npm run test:fitness` PASS với Exit code 0 nếu chạm source/kiến trúc.
 - [ ] 6. **No Open Assumptions**: Không còn giả định mở hoặc xung đột chưa giải quyết.
 - [ ] 7. **Conditional Commit**: Commit trên branch hợp lệ nếu task có thay đổi mã nguồn/tài liệu cần lưu trữ (task read-only không cần commit).
+- [ ] 8. **Evidence & Handoff**: Kiểm chứng và báo cáo đúng phạm vi; skipped/not run không phải PASS.

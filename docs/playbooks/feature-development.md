@@ -12,11 +12,11 @@ Quy trình phát triển tính năng mới tuân thủ nghiêm ngặt mô hình 
 
 ### Bước 1: Soạn Thảo Đặc Tả & Batch Prompt
 1. Tiếp nhận yêu cầu nghiệp vụ từ Stakeholder / Developer.
-2. Viết tài liệu đặc tả chức năng vào `docs/main_docs/<ACTIVE_VERSION>/fn/<module-name>.md`:
+2. Soạn đề xuất đặc tả chức năng; chỉ cập nhật spec canonical tại `docs/main_docs/<ACTIVE_VERSION>/fn/<module-name>.md` khi thay đổi nghiệp vụ đã được Developer duyệt:
    - Mục đích tính năng.
    - User stories & Acceptance Criteria (AC).
    - Input/Output & Edge cases.
-3. Tạo file batch prompt tập trung: `docs/tasks/<feat-name>/prompt-dieu-tra-<feat-name>.md` chia nhỏ thành các task độc lập (Task 1: Schema/Domain -> Task 2: Service/Logic -> Task 3: UI/Integration).
+3. Tạo file batch prompt tập trung: `docs/tasks/<feat-name>/prompt-dieu-tra-<feat-name>.md`. Mặc định một task cho một kết quả nghiệm thu; mỗi task chứa code/tests/docs cần thiết. Chỉ tách kết quả độc lập và ghi dependencies theo [Task Authoring](../task-authoring/README.md), không tách theo tầng DB/service/UI.
 
 ### Bước 2: Thiết Kế Kỹ Thuật (Technical Design & Task Prep)
 1. Mở Clean Session điều tra cho từng Task.
@@ -34,4 +34,4 @@ Quy trình phát triển tính năng mới tuân thủ nghiêm ngặt mô hình 
    npm test
    npm run test:fitness
    ```
-6. Commit khi toàn bộ test PASS.
+6. Chạy thêm static/build/manual checks cần thiết theo [Verification Standard](../standards/verification.md); Conditional Commit khi đạt gate, bàn giao theo [Handoff Contract](../operations/handoff-contract.md).

@@ -95,6 +95,7 @@ Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
 
 ## 5. Quy Chuẩn Git & Release
 - [ ] Code được commit trên branch riêng theo task (`task/*`, `feat/*`, `fix/*`, `hotfix/*`), tuyệt đối không commit trên `main`/`master`.
-- [ ] Working tree chỉ chứa các thay đổi thuộc phạm vi task; không có file rác, file `.env.local` hoặc secret keys bị commit nhầm.
+- [ ] Index/commit chỉ chứa thay đổi task; không có file rác hoặc secrets. Baseline chưa commit đã được ghi nhận và giữ nguyên.
 - [ ] Sau commit, `git status --short` sạch sẽ không còn file dở dang ngoài baseline đã ghi nhận.
 - [ ] Commit message tuân theo Conventional Commits.
+- [ ] AC evidence, required manual checks và local/CI đúng revision theo [Verification Standard](../standards/verification.md); bàn giao theo [Handoff Contract](handoff-contract.md).
