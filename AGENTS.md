@@ -109,6 +109,14 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 
 ---
 
+### C. Kiểm Tra Merge Request Trước Khi Vào `main` (Merge Review Gate)
+- Khi nhận yêu cầu review hoặc merge PR/MR, AI bắt buộc thực hiện [Merge Review Gate](docs/operations/preflight-checklist.md#merge-review-gate) và trả lời đủ **10 câu hỏi**, kèm bằng chứng cho từng câu, trước khi kết luận nhánh có thể merge vào `main`/`master`.
+- Đối chiếu với ticket gốc, approved task và functional specs theo Hierarchy of Truth; không lấy prompt triển khai làm nguồn nghiệm thu duy nhất.
+- Báo cáo phải xác định source branch, target branch, commit SHA đã review và kết quả từng câu: `PASS`, `FAIL`, `UNVERIFIED` hoặc `N/A` có lý do. Chỉ kết luận đủ điều kiện merge khi cả 10 câu đều `PASS` hoặc `N/A` hợp lệ, không còn blocker hay kiểm tra bắt buộc chưa xác minh.
+- Review áp dụng cho cả Standard và Fast Track; không thay thế approval gate, DoD hay quyền cho phép thao tác Git. Yêu cầu review là read-only; chỉ thực hiện merge khi Developer yêu cầu rõ ràng và gate đã đạt. Nếu source/target commit thay đổi, phải cập nhật review và kiểm tra lại phần bị ảnh hưởng trước khi merge.
+
+---
+
 ## 4. Điểm Dừng Báo Cáo & Leo Thang Quyết Định (Escalation Triggers)
 
 AI Agent bắt buộc **DỪNG LẠI NGAY LẬP TỨC**, không tự ý đoán hoặc tự ra quyết định, phải báo cáo Developer khi gặp:
@@ -226,6 +234,7 @@ Khi cần tra cứu sâu, AI truy cập các điểm neo tương ứng (không n
 | **Cẩm Nang & Bootstrap** | [docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md) (Hướng dẫn toàn diện SEOS) |
 | **10 Điều Bất Biến (One-Pager)**| [docs/operations/quick-checklist.md](docs/operations/quick-checklist.md) |
 | **Kiểm Định Trước Release** | [docs/operations/preflight-checklist.md](docs/operations/preflight-checklist.md) |
+| **Review PR/MR Trước Merge** | [Merge Review Gate: 10 câu hỏi bắt buộc](docs/operations/preflight-checklist.md#merge-review-gate) |
 | **Đặc Tả Nghiệp Vụ ("WHAT")** | `docs/main_docs/<ACTIVE_VERSION>/fn/*.md` |
 | **Ranh Giới Phân Tầng & Luồng Sống Còn** | `docs/system-map/modules.md`, `dependencies.md`, `critical-paths.md` |
 | **SOP Tác Chiến (Playbooks)** | `docs/playbooks/` (bug-investigation, feature-dev, db-migration, incident) |

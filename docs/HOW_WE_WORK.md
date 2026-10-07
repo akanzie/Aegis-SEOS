@@ -68,6 +68,18 @@ Khi có một tính năng mới hoặc một danh sách lỗi cần sửa, bạn
 
 ---
 
+#### C. Khi Nhận Yêu Cầu Review / Merge Request
+
+Sau Conditional Commit và trước khi kết luận nhánh có thể merge vào `main`, thực hiện [Merge Review Gate: 10 câu hỏi bắt buộc](operations/preflight-checklist.md#merge-review-gate). Gate áp dụng cho cả Standard và Fast Track:
+
+`Yêu cầu review/merge -> Xác định source/target commit và diff -> Đối chiếu ticket/spec gốc -> Trả lời 10 câu kèm bằng chứng -> Kết luận đủ/chưa đủ điều kiện merge`.
+
+- Mỗi câu ghi `PASS`, `FAIL`, `UNVERIFIED` hoặc `N/A` có lý do; test chưa chạy, CI chưa xác minh hoặc thiếu bằng chứng không được ghi PASS.
+- Chỉ kết luận đủ điều kiện merge khi đủ 10 câu, không còn blocker hoặc kiểm tra bắt buộc chưa xác minh. Nếu commit source/target thay đổi, cập nhật review và kiểm tra lại phần bị ảnh hưởng.
+- Review không tự động cho phép merge/push. Chỉ merge khi Developer yêu cầu rõ ràng và gate đã đạt; nếu chưa đạt, báo cáo vấn đề và bước cần làm tiếp theo.
+
+---
+
 ### 3. Nguyên Tắc "Spec Impact Assessment" (Trái Tim Nghiệp Vụ)
 
 Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời câu hỏi: **"Sửa đổi này tác động gì đến tài liệu đặc tả nghiệp vụ?"**:
@@ -204,5 +216,6 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
 | *"Soạn batch prompt cho yêu cầu X"* | Phân tích yêu cầu -> Chia task độc lập -> Xuất vào `docs/tasks/X.md`. Không sửa code. |
 | *"Chạy điều tra Task N"* | Đọc đúng Context Package tương ứng -> Trace code -> Phân tích Spec Impact -> Xuất `task-N-fix.md` (draft). |
 | *"Thực thi Task N"* | Kiểm tra file fix đã approved -> Cập nhật Spec -> Sửa Code -> Chạy test/fitness -> Auto commit trên branch riêng. |
+| *"Review / merge request vào main"* | Xác định source/target commit -> Đối chiếu ticket/spec gốc -> Trả lời đủ 10 câu trong Merge Review Gate kèm bằng chứng -> Kết luận đủ/chưa đủ điều kiện; chỉ merge khi được yêu cầu rõ ràng và gate đạt. |
 | *"Sửa nhanh lỗi chính tả / format này"* | Áp dụng Fast Track -> Sửa trực tiếp -> Chạy test -> Commit ngay. |
 
