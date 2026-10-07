@@ -21,3 +21,7 @@ Mỗi file trong `docs/context-packages/<domain>.md` tuân theo cấu trúc:
 
 - [template.md](template.md) — Mẫu chuẩn để tạo Context Package mới.
 - [auth-context.md](auth-context.md) — Context Package cho phân hệ Authentication & Session.
+
+## 3. Package thiếu hoặc chưa đủ
+
+Nếu không có package đúng scope, ghi rõ và đọc tối thiểu task, spec active, boundaries và code/tests trực tiếp. Must Load là điểm bắt đầu; trace thêm contracts/callers khi có bằng chứng nằm trong blast radius, không nạp package ngoại vi đón đầu. Cập nhật package nếu task phát hiện đường dẫn lỗi thời hoặc thiếu interface quan trọng. Không áp dụng package Auth cho task chỉ làm quy trình tài liệu.

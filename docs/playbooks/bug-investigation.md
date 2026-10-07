@@ -8,6 +8,7 @@ Playbook này hướng dẫn cách thực hiện một session điều tra (Inve
 - **Investigation Session chỉ xuất tài liệu phân tích, KHÔNG sửa code.**
 - Giữ Token Budget trong ngưỡng `<= 30k tokens`.
 - Chỉ đọc các files liên quan trực tiếp đến luồng bị lỗi (Context Package).
+- Áp dụng [Agent Workflow](../operations/agent-workflow.md) và [Task Authoring](../task-authoring/README.md). Nếu thiếu package, ghi rõ và trace tối thiểu từ task/spec/boundaries.
 
 ---
 
@@ -39,7 +40,11 @@ task_id: task-N
 title: "Mô tả ngắn gọn lỗi"
 status: draft
 spec_impact: NONE # [NONE | CLARIFICATION | CHANGE | CONFLICT]
-risk_level: LOW # [LOW | MEDIUM | HIGH | CRITICAL]
+risk_level: LOW # [TRIVIAL | LOW | MEDIUM | HIGH | CRITICAL]
+critical_flow: P3
+depends_on: []
+approved_by: null
+approved_at: null
 target_files:
   - src/services/example.ts
 ---
@@ -55,4 +60,8 @@ Mô tả chính xác các thay đổi cần thực hiện. Tránh refactor lan m
 ## 3. Verification & Testing Plan
 - Test case cần thêm để tái hiện và chặn hồi quy.
 - Lệnh chạy kiểm tra: `npm test`, `npm run test:fitness`.
+
+## 4. AC, Blast Radius & Open Issues
+- Ánh xạ yêu cầu/AC sang spec, callers/contracts và test matrix thực tế.
+- Ghi compatibility/rollback nếu áp dụng; còn quyết định mở thì giữ draft và báo Developer.
 ```

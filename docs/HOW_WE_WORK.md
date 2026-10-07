@@ -22,7 +22,7 @@ Nếu bạn là Developer mới tham gia dự án hoặc bắt đầu áp dụng
 | **Nguồn sự thật** | Nằm trong đầu Dev hoặc trôi nổi trong lịch sử chat | Lưu trên đĩa (`docs/main_docs/fn/`, `system-map/`, `project-memory/`) |
 | **Chi phí token** | Phình to theo thời gian, AI bắt đầu quên và sinh ảo giác | Tối ưu tuyệt đối theo **Context Packages** (< 30k tokens/session) |
 | **Bảo vệ kiến trúc** | Trông chờ vào trí nhớ của Dev hoặc AI | **Máy chấm tự động** (`npm run test:fitness` fail ngay nếu vi phạm) |
-| **Nghiệp vụ vs Code** | Code đổi nhưng spec không đổi, sinh hàng tá bug ngầm | Bắt buộc đánh giá **Spec Impact** (`NONE/CLARIFY/CHANGE/CONFLICT`) |
+| **Nghiệp vụ vs Code** | Code đổi nhưng spec không đổi, sinh hàng tá bug ngầm | Bắt buộc đánh giá **Spec Impact** (`NONE/CLARIFICATION/CHANGE/CONFLICT`) |
 
 ---
 
@@ -63,8 +63,20 @@ Khi có một tính năng mới hoặc một danh sách lỗi cần sửa, bạn
 - **Tuyệt đối KHÔNG commit trực tiếp lên `main` / `master`**.
 - Luôn làm việc trên branch riêng theo task: `task/<ten-task>`, `feat/<ten-feature>`, `fix/<ten-bug>`, hoặc `hotfix/<incident-code>`.
 - **Bảo toàn Baseline**: Không tự ý sửa, stash, reset hoặc commit các thay đổi có sẵn từ trước trong working tree.
-- AI chỉ commit khi working tree chỉ chứa các thay đổi thuộc phạm vi task, toàn bộ test và fitness functions đều PASS (Exit code 0).
+- AI chỉ commit khi index chỉ chứa thay đổi thuộc task, baseline giữ nguyên, các kiểm tra bắt buộc và fitness functions đều PASS. Sau commit không còn thay đổi task chưa xử lý.
 - Task read-only và investigation thuần túy không bắt buộc tạo commit.
+
+---
+
+#### C. Khi Nhận Yêu Cầu Review / Merge Request
+
+Sau Conditional Commit và trước khi kết luận nhánh có thể merge vào `main`, thực hiện [Merge Review Gate: 10 câu hỏi bắt buộc](operations/preflight-checklist.md#merge-review-gate). Gate áp dụng cho cả Standard và Fast Track:
+
+`Yêu cầu review/merge -> Xác định source/target commit và diff -> Đối chiếu ticket/spec gốc -> Trả lời 10 câu kèm bằng chứng -> Kết luận đủ/chưa đủ điều kiện merge`.
+
+- Mỗi câu ghi `PASS`, `FAIL`, `UNVERIFIED` hoặc `N/A` có lý do; test chưa chạy, CI chưa xác minh hoặc thiếu bằng chứng không được ghi PASS.
+- Chỉ kết luận đủ điều kiện merge khi đủ 10 câu, không còn blocker hoặc kiểm tra bắt buộc chưa xác minh. Nếu commit source/target thay đổi, cập nhật review và kiểm tra lại phần bị ảnh hưởng.
+- Review không tự động cho phép merge/push. Chỉ merge khi Developer yêu cầu rõ ràng và gate đã đạt; nếu chưa đạt, báo cáo vấn đề và bước cần làm tiếp theo.
 
 ---
 
@@ -80,6 +92,10 @@ Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời c
 
 # PHẦN 2: DÀNH CHO AI AGENT (COLD-START BOOTSTRAP PROTOCOL)
 
+Lõi quy trình dùng chung gồm [Agent Workflow](operations/agent-workflow.md), [Task Authoring](task-authoring/README.md), [Verification Standard](standards/verification.md) và [Handoff Contract](operations/handoff-contract.md). Nhận diện mode trước thao tác; không tự duyệt plan, chuyển mode hoặc coi skipped/manual pending là PASS.
+
+Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/project-adoption.md). Xác minh stack, scripts, CI và tài liệu hiện có trước tạo/cập nhật; không ghi đè baseline. Tạo project profile với commands tương đương và sources of truth thực tế. Các đường dẫn `src/`, Node.js và npm dưới đây là mẫu tham chiếu, cần điều chỉnh theo stack.
+
 > [!IMPORTANT]
 > **Chỉ thị dành riêng cho AI khi nhận file này trong một repository mới**:  
 > Nếu Developer yêu cầu: *"Khởi tạo hệ thống theo HOW_WE_WORK.md"* (hoặc bootstrap repository), AI phải **tự động khởi tạo toàn bộ bộ khung thư mục và các file mẫu** dưới đây mà không cần hỏi lại từng file.
@@ -91,10 +107,15 @@ Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời c
 ├── AGENTS.md                            # Hợp đồng vận hành tối cao (Operating Contract)
 ├── docs/
 │   ├── HOW_WE_WORK.md                   # File cẩm nang này
+│   ├── task-authoring/README.md         # Chuẩn hóa yêu cầu, AC và phân rã task
 │   ├── context-packages/                # First-Class Context Packages (Load/Do Not Load/Token Budget)
 │   ├── operations/
 │   │   ├── quick-checklist.md           # 1 trang One-Pager: 10 điều bất biến
-│   │   └── preflight-checklist.md       # Checklist chi tiết trước release
+│   │   ├── preflight-checklist.md       # Checklist chi tiết trước release
+│   │   ├── agent-workflow.md            # Mode, approval, review/rework
+│   │   ├── handoff-contract.md          # Bằng chứng và bàn giao
+│   │   ├── project-adoption.md          # Áp dụng theo stack thực tế
+│   │   └── project-profile.md           # Lệnh, môi trường và gate của dự án
 │   ├── governance/
 │   │   └── knowledge-lifecycle.md       # Vòng đời tài liệu, Retention & Archive rules
 │   ├── system-map/
@@ -123,6 +144,7 @@ Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời c
 │   ├── architecture/                    # Thiết kế kỹ thuật chi tiết
 │   ├── decisions/                       # Architecture Decision Records (ADR)
 │   ├── standards/                       # Quy chuẩn code (TypeScript, DB, Security)
+│   │   └── verification.md              # AC evidence và chính sách kiểm chứng
 │   ├── tasks/                           # Nơi chứa các batch prompts và file fix
 │   └── dev_notes/                       # Khu vực sandbox nháp
 └── scripts/
@@ -204,5 +226,6 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
 | *"Soạn batch prompt cho yêu cầu X"* | Phân tích yêu cầu -> Chia task độc lập -> Xuất vào `docs/tasks/X.md`. Không sửa code. |
 | *"Chạy điều tra Task N"* | Đọc đúng Context Package tương ứng -> Trace code -> Phân tích Spec Impact -> Xuất `task-N-fix.md` (draft). |
 | *"Thực thi Task N"* | Kiểm tra file fix đã approved -> Cập nhật Spec -> Sửa Code -> Chạy test/fitness -> Auto commit trên branch riêng. |
+| *"Review / merge request vào main"* | Xác định source/target commit -> Đối chiếu ticket/spec gốc -> Trả lời đủ 10 câu trong Merge Review Gate kèm bằng chứng -> Kết luận đủ/chưa đủ điều kiện; chỉ merge khi được yêu cầu rõ ràng và gate đạt. |
 | *"Sửa nhanh lỗi chính tả / format này"* | Áp dụng Fast Track -> Sửa trực tiếp -> Chạy test -> Commit ngay. |
 

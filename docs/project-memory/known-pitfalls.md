@@ -18,3 +18,8 @@ Tài liệu này lưu lại các "hố bẫy" kỹ thuật đã gặp phải tro
 - **Hiện tượng**: Sử dụng `findMany()` hoặc `SELECT *` không có `limit`/`take`.
 - **Hậu quả**: Hệ thống chậm hoặc Out Of Memory khi lượng dữ liệu phình to trên Production.
 - **Biện pháp**: Bắt buộc có default limit (ví dụ: `take: 50`) và cursor/offset pagination.
+
+## 4. Chạy Checks Song Song Khi Dùng Chung Cấu Hình
+- **Hiện tượng**: Bộ test validator tạo cấu hình lỗi tạm tại repository root để test fail-loud, trong lúc một tiến trình fitness khác đọc cùng cấu hình.
+- **Hậu quả**: Fitness báo lỗi do fixture tạm, không phản ánh trạng thái repository cần nghiệm thu.
+- **Biện pháp**: Chạy test validator xong rồi mới chạy fitness; các checks sửa tài nguyên chung phải chạy tuần tự hoặc trong môi trường cách ly. Không sửa validator ngoài scope chỉ để che kết quả nhiễu.
