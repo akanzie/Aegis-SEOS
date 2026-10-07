@@ -26,6 +26,6 @@
 
 ## 4. Đầu Ra Điều Tra
 
-Trace spec active, code, callers/contracts và tests thực tế; không đoán root cause hoặc đường dẫn. Tạo `task-N-fix.md` hoặc `task-N-feat.md` với `status: draft`, Spec Impact, scope, test matrix và Open Issues. Chia task theo kết quả nghiệm thu độc lập, ghi `depends_on` khi cần.
+Trace spec active, code, callers/contracts và tests thực tế; không đoán root cause hoặc đường dẫn. Tạo `task-N-fix.md` hoặc `task-N-feat.md` với `approval_status: pending`, `execution_status: not_started`, Spec Impact, scope, test matrix và Open Issues. Chia task theo kết quả nghiệm thu độc lập, ghi `depends_on` khi cần.
 
 Chưa sửa runtime hoặc tự approve plan. Nếu gặp conflict, security exposure hoặc trade-off kiến trúc, báo Developer và chỉ tiếp tục khảo sát độc lập an toàn.

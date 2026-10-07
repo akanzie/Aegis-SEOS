@@ -23,3 +23,8 @@ Tài liệu này lưu lại các "hố bẫy" kỹ thuật đã gặp phải tro
 - **Hiện tượng**: Bộ test validator tạo cấu hình lỗi tạm tại repository root để test fail-loud, trong lúc một tiến trình fitness khác đọc cùng cấu hình.
 - **Hậu quả**: Fitness báo lỗi do fixture tạm, không phản ánh trạng thái repository cần nghiệm thu.
 - **Biện pháp**: Chạy test validator xong rồi mới chạy fitness; các checks sửa tài nguyên chung phải chạy tuần tự hoặc trong môi trường cách ly. Không sửa validator ngoài scope chỉ để che kết quả nhiễu.
+
+## 5. Unicode Trong Script Truyền Qua PowerShell Pipe
+
+- **Hiện tượng**: Truyền Python source có tiếng Việt qua pipe của PowerShell dùng output encoding ASCII làm ký tự thành `?` trước khi Python nhận source; `write_text(encoding='utf-8')` không khôi phục ký tự đã mất.
+- **Biện pháp**: Chạy file script UTF-8, hoặc xác minh encoding pipe trước khi truyền Unicode. Review nội dung/encoding sau ghi; không chỉ dựa exit code. Chuẩn hóa rendered context theo [Context Assembly](../governance/context-assembly.md), không suy checkout newline là cache evidence.

@@ -11,6 +11,7 @@ Quy trình phát triển tính năng mới tuân thủ nghiêm ngặt mô hình 
 ```
 
 ### Bước 1: Soạn Thảo Đặc Tả & Batch Prompt
+
 1. Tiếp nhận yêu cầu nghiệp vụ từ Stakeholder / Developer.
 2. Soạn đề xuất đặc tả chức năng; chỉ cập nhật spec canonical tại `docs/main_docs/<ACTIVE_VERSION>/fn/<module-name>.md` khi thay đổi nghiệp vụ đã được Developer duyệt:
    - Mục đích tính năng.
@@ -19,12 +20,14 @@ Quy trình phát triển tính năng mới tuân thủ nghiêm ngặt mô hình 
 3. Tạo file batch prompt tập trung: `docs/tasks/<feat-name>/prompt-dieu-tra-<feat-name>.md`. Mặc định một task cho một kết quả nghiệm thu; mỗi task chứa code/tests/docs cần thiết. Chỉ tách kết quả độc lập và ghi dependencies theo [Task Authoring](../task-authoring/README.md), không tách theo tầng DB/service/UI.
 
 ### Bước 2: Thiết Kế Kỹ Thuật (Technical Design & Task Prep)
+
 1. Mở Clean Session điều tra cho từng Task.
 2. Xác định các interface, DTOs, entity changes.
-3. Xuất file `task-N-fix.md` hoặc `task-N-feat.md` với `status: draft`.
-4. Developer duyệt (`status: approved`).
+3. Xuất file `task-N-fix.md` hoặc `task-N-feat.md` với `approval_status: pending`, `execution_status: not_started`.
+4. Developer duyệt (`approval_status: approved` với issuer/time/revision đúng scope).
 
 ### Bước 3: Thực Thi Kỹ Thuật (Surgical Execution)
+
 1. Tạo branch: `git checkout -b feat/<feat-name>-task-<N>`.
 2. Tạo/Sửa Domain logic trước (TDD nếu có thể).
 3. Triển khai Service layer và Infrastructure adapters.

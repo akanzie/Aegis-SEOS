@@ -18,7 +18,7 @@ Nếu không có findings, ghi rõ phạm vi đã kiểm tra và giới hạn b�
 
 ## 2. Merge Review Gate (Chỉ Khi Review / Merge PR hoặc MR)
 
-Giữ đủ 10 câu khi áp dụng; với review artifact thuần túy, bỏ mục này và nêu lý do. Chi tiết bằng chứng theo `docs/operations/preflight-checklist.md`.
+Giữ đủ 10 câu khi áp dụng; với review artifact thuần túy, bỏ mục này và nêu lý do. Chi tiết bằng chứng theo [Merge Review](../operations/merge-review.md).
 
 | # | Câu hỏi | Trạng thái | Trả lời và bằng chứng | Bước tiếp theo |
 | :--- | :--- | :--- | :--- | :--- |
@@ -42,4 +42,4 @@ Trạng thái gate: PASS / FAIL / UNVERIFIED / N/A có lý do. Chỉ kết luậ
 - Kết luận: [Artifact cần rework / ready for review; với merge: CHƯA ĐỦ hoặc ĐỦ ĐIỀU KIỆN MERGE].
 - Blockers / residual risks / authority: [Bước tiếp theo và người có quyền].
 
-Kết luận chỉ có hiệu lực cho revision đã review. Source/target thay đổi phải kiểm tra lại phần ảnh hưởng. Reviewer chỉ approve khi Developer đã ủy quyền; review đạt không cấp quyền merge/push/deploy. Trigger, independence và xử lý thiếu reviewer theo [Agent Workflow](../operations/agent-workflow.md).
+Kết luận chỉ có hiệu lực cho revision đã review. Source/target thay đổi phải kiểm tra lại phần ảnh hưởng. Reviewer chỉ approve khi Developer đã ủy quyền; review đạt không cấp quyền merge/push/deploy. Trigger, independence và xử lý thiếu reviewer theo [Review & Rework](../operations/review-rework.md#independent-review).

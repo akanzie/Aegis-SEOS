@@ -20,8 +20,8 @@ Templates hỗ trợ quy trình; nguồn quy định vẫn là `AGENTS.md` và c
 
 - [Task Authoring](../task-authoring/README.md), [Agent Workflow](../operations/agent-workflow.md).
 - [Verification](../standards/verification.md), [Handoff Contract](../operations/handoff-contract.md).
-- [Merge Review Gate](../operations/preflight-checklist.md#merge-review-gate), [ADR](../decisions/README.md).
+- [Merge Review Gate](../operations/merge-review.md#merge-review-gate), [ADR](../decisions/README.md).
 
 Chỉ các file trong `docs/templates/` là template đầy đủ. SOP/README có thể nêu yêu cầu hoặc ví dụ rút gọn; ví dụ không thay thế các template này.
 
-Task plans khởi tạo với `approval_status: pending`, `execution_status: not_started`; approval có issuer/time/revision và tách khỏi execution. Chỉ chuyển completed sau DoD và lifecycle close sequence. Template chứa placeholder không phải task active hoặc functional spec canonical. Chi tiết transitions tại [Agent Workflow](../operations/agent-workflow.md).
+Task plans khởi tạo với `approval_status: pending`, `execution_status: not_started`; approval có issuer/time/revision và tách khỏi execution. Chỉ chuyển completed sau DoD và lifecycle close sequence. Template chứa placeholder không phải task active hoặc functional spec canonical. Chi tiết transitions tại [Task Lifecycle](../operations/task-lifecycle.md).
