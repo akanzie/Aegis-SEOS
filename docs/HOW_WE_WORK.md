@@ -4,12 +4,11 @@
 > **Tuyên ngôn cốt lõi:**  
 > *"Tài liệu là hệ điều hành (Docs-as-an-OS), Code là kết quả phái sinh, Session AI là tiến trình độc lập và dùng một lần (Disposable Process)."*
 
-Tài liệu này phục vụ **2 mục đích song song**:
-1. **Dành cho Người mới (Developer Onboarding)**: Đọc 10 phút là hiểu toàn bộ văn hóa kỹ thuật, quy trình làm việc hàng ngày, cách ra lệnh cho AI mà không gây nợ kỹ thuật và không bị ảo giác.
-2. **Dành cho AI Agent (Cold-Start Bootstrap Protocol)**: Khi sang một dự án mới hoàn toàn, Developer chỉ cần đưa file này cho AI và ra lệnh: *"Khởi tạo hệ thống theo tài liệu này"*, AI sẽ khởi tạo bộ khung theo tài liệu này và chủ động làm rõ các điểm mơ hồ (`surface any ambiguity`) để thống nhất trước khi đào sâu triển khai.
+Tài liệu chia rõ hai phần: **Human Onboarding** hướng dẫn Developer làm việc hàng ngày; **AI Bootstrap** chỉ áp dụng khi Developer yêu cầu khởi tạo SEOS cho repository mới. Dùng [AGENTS §10 routing map](../AGENTS.md#routing-map) để chọn entry point theo phase/trigger; HOW_WE_WORK không tạo routing map riêng.
 
 ---
 
+<a id="human-onboarding"></a>
 # PHẦN 1: DÀNH CHO CON NGƯỜI (HUMAN ONBOARDING)
 
 Nếu bạn là Developer mới tham gia dự án hoặc bắt đầu áp dụng mô hình này: **Chào mừng bạn đến với kỷ nguyên phát triển phần mềm AI-Native có kỷ luật.**
@@ -20,7 +19,7 @@ Nếu bạn là Developer mới tham gia dự án hoặc bắt đầu áp dụng
 | :--- | :--- | :--- |
 | **Bản chất cuộc chat** | Trò chuyện dài vô tận, code dở dang tích lũy trong chat | Mỗi session chat là 1 tiến trình độc lập, xong task là đóng session |
 | **Nguồn sự thật** | Nằm trong đầu Dev hoặc trôi nổi trong lịch sử chat | Lưu trên đĩa (`docs/main_docs/fn/`, `system-map/`, `project-memory/`) |
-| **Chi phí token** | Phình to theo thời gian, AI bắt đầu quên và sinh ảo giác | Tối ưu tuyệt đối theo **Context Packages** (< 30k tokens/session) |
+| **Chi phí token** | Phình to theo thời gian, AI bắt đầu quên và sinh ảo giác | Dùng package target và session budget/overflow theo [AGENTS §8](../AGENTS.md#context-budget) |
 | **Bảo vệ kiến trúc** | Trông chờ vào trí nhớ của Dev hoặc AI | **Máy chấm tự động** (`npm run test:fitness` fail ngay nếu vi phạm) |
 | **Nghiệp vụ vs Code** | Code đổi nhưng spec không đổi, sinh hàng tá bug ngầm | Bắt buộc đánh giá **Spec Impact** (`NONE/CLARIFICATION/CHANGE/CONFLICT`) |
 
@@ -46,25 +45,22 @@ Khi có một tính năng mới hoặc một danh sách lỗi cần sửa, bạn
                │
                ▼
 [BƯỚC 3: DUYỆT & THỰC THI (Execution)]
-- Dev xem lướt file fix -> Đổi metadata sang "status: approved" (hoặc đưa AI khác review)
+- Dev xem plan -> Ghi approval record cho revision/scope được duyệt
 - Mở Clean Session mới -> Chỉ thị: "Thực thi docs/tasks/<name>/task-N-fix.md"
 - AI cập nhật Spec -> Sửa Code phẫu thuật -> Chạy test & fitness -> Tự động Commit
 ```
 
 #### A. Khi Nào Dùng Luồng Nhanh (Fast Track)?
-Để không bị mệt mỏi vì thủ tục, bạn được dùng **Fast Track** (bỏ qua bước tạo task file và approval gate) khi thỏa mãn:
+Để không bị mệt mỏi vì thủ tục, bạn được dùng **Fast Track** (không cần task file/approved Standard plan riêng; cần yêu cầu trực tiếp của Developer với scope rõ) khi thỏa mãn:
 - Sửa lỗi chính tả (typo), cập nhật markdown, viết comment, format code.
 - Chỉnh sửa CSS thuần túy không đổi cấu trúc layout/DOM.
 - Viết bổ sung Unit test thuần túy không sửa logic runtime.
 - Task read-only: Giải thích kiến trúc, trace code, review logic.
-- **Quy trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi mã nguồn/tài liệu)`.
+- **Quy trình Fast Track**: `Điều tra nhanh -> Sửa đổi -> Verify theo AGENTS §5.D -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi cần lưu trữ)`.
+- **Căn cứ EXECUTE**: Standard dùng approved plan đúng revision/scope; Fast Track dùng yêu cầu trực tiếp, rõ scope của Developer khi đủ điều kiện AGENTS §3.B. Mode permission tại [Agent Workflow](operations/agent-workflow.md).
 
 #### B. Quy Tắc Vàng Về Git & Cam Kết Có Điều Kiện:
-- **Tuyệt đối KHÔNG commit trực tiếp lên `main` / `master`**.
-- Luôn làm việc trên branch riêng theo task: `task/<ten-task>`, `feat/<ten-feature>`, `fix/<ten-bug>`, hoặc `hotfix/<incident-code>`.
-- **Bảo toàn Baseline**: Không tự ý sửa, stash, reset hoặc commit các thay đổi có sẵn từ trước trong working tree.
-- AI chỉ commit khi index chỉ chứa thay đổi thuộc task, baseline giữ nguyên, các kiểm tra bắt buộc và fitness functions đều PASS. Sau commit không còn thay đổi task chưa xử lý.
-- Task read-only và investigation thuần túy không bắt buộc tạo commit.
+Theo [AGENTS §2.C](../AGENTS.md), dùng branch task hợp lệ và giữ nguyên baseline. Index chỉ chứa thay đổi task, các gate bắt buộc theo [§5.D](../AGENTS.md#quality-gate-applicability) đã PASS, không còn giả định mở; sau commit không còn thay đổi task chưa xử lý. Baseline được ghi nhận có thể vẫn còn trong working tree. Điều kiện đầy đủ và quyền Git thuộc AGENTS; tài liệu này chỉ hướng dẫn. Task read-only/investigation thuần túy không commit code.
 
 ---
 
@@ -80,7 +76,7 @@ Sau Conditional Commit và trước khi kết luận nhánh có thể merge vào
 
 ---
 
-### 3. Nguyên Tắc "Spec Impact Assessment" (Trái Tim Nghiệp Vụ)
+### 3. Đánh Giá Spec Impact
 
 Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời câu hỏi: **"Sửa đổi này tác động gì đến tài liệu đặc tả nghiệp vụ?"**:
 1. **`NONE`**: Code đang chạy sai so với spec chuẩn -> Sửa code, giữ nguyên spec.
@@ -90,9 +86,12 @@ Mỗi khi sửa bất kỳ dòng code nào, AI bắt buộc phải trả lời c
 
 ---
 
-# PHẦN 2: DÀNH CHO AI AGENT (COLD-START BOOTSTRAP PROTOCOL)
+<a id="ai-bootstrap"></a>
+# PHẦN 2: DÀNH CHO AI AGENT KHI DEVELOPER YÊU CẦU BOOTSTRAP
 
-Lõi quy trình dùng chung gồm [Agent Workflow](operations/agent-workflow.md), [Task Authoring](task-authoring/README.md), [Verification Standard](standards/verification.md) và [Handoff Contract](operations/handoff-contract.md). Nhận diện mode trước thao tác; không tự duyệt plan, chuyển mode hoặc coi skipped/manual pending là PASS.
+Phần này không phải hướng dẫn onboarding thường ngày. Dùng khi Developer yêu cầu tạo/tiếp nhận SEOS trên repository mới; với session trong repository đang hoạt động, theo cold-start/resume tại [Agent Workflow](operations/agent-workflow.md).
+
+Lõi quy trình dùng chung gồm [Agent Workflow](operations/agent-workflow.md), [Task Authoring](task-authoring/README.md), [Verification Standard](standards/verification.md) và [Handoff Contract](operations/handoff-contract.md). Workflow sở hữu permission, approval/execution lifecycle, cold-start và reviewer independence; các entry points này dẫn tới định nghĩa thay vì chép transitions. Nhận diện mode trước thao tác; không tự duyệt plan, chuyển mode hoặc coi skipped/manual pending là PASS.
 
 Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/project-adoption.md). Xác minh stack, scripts, CI và tài liệu hiện có trước tạo/cập nhật; không ghi đè baseline. Tạo project profile với commands tương đương và sources of truth thực tế. Các đường dẫn `src/`, Node.js và npm dưới đây là mẫu tham chiếu, cần điều chỉnh theo stack.
 
@@ -111,6 +110,7 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 │   ├── templates/                       # Prompt, task, profile, review/rework, handoff, ADR, spec
 │   ├── context-packages/                # First-Class Context Packages (Load/Do Not Load/Token Budget)
 │   ├── operations/
+│   │   ├── critical-flows.md            # Taxonomy canonical P0–P4 và blast radius
 │   │   ├── quick-checklist.md           # 1 trang One-Pager: 10 điều bất biến
 │   │   ├── preflight-checklist.md       # Checklist chi tiết trước release
 │   │   ├── agent-workflow.md            # Mode, approval, review/rework
@@ -136,7 +136,7 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 │   │   ├── rejected-solutions.md        # Phương án đã loại bỏ & lý do
 │   │   └── technical-lessons.md         # Bài học đúc kết
 │   ├── business-metrics/
-│   │   └── critical-flows.md            # Phân cấp User flows trọng yếu (P0-P4)
+│   │   └── critical-flows.md            # Compatibility pointer tới operations/critical-flows.md
 │   ├── engineering-incidents/
 │   │   └── incident-template.md         # Mẫu ghi nhận sự cố post-mortem
 │   ├── main_docs/
@@ -160,24 +160,15 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩn mực:
 
 #### A. `AGENTS.md` (Root Contract)
-- Định nghĩa rõ thứ tự ưu tiên giải quyết mâu thuẫn: `An Toàn > Dev Override > Approved Task > Functional Specs > Architecture > Code Style`.
+- Dẫn [hierarchy canonical tại AGENTS §0](../AGENTS.md): Approved task quyết định scope/AC, Accepted ADR quyết định Technical HOW còn hiệu lực; system map/technical architecture là tài liệu dẫn xuất, profile chỉ ánh xạ capability. Không tạo hierarchy rút gọn có authority riêng.
 - Khai báo quy chuẩn Git an toàn: Cấm commit lên `main`, tự tạo branch theo task (`task/*`, `feat/*`, `fix/*`, `hotfix/*`), bảo toàn baseline, cấm tự ý `push`/`reset --hard`.
-- Khai báo Token Budget: Low (<= 10k), Medium (<= 30k), High (<= 60k), Critical (Cần duyệt).
+- Dẫn tới [AGENTS §8](../AGENTS.md#context-budget) cho session budget, package target và overflow action; không sao chép ngưỡng.
 - Khai báo 2 luồng: Fast Track (Fast Track DoD) và Standard 3-Step Path (Standard DoD).
 
 #### B. `docs/operations/quick-checklist.md` (10 Điều Bất Biến & Split DoD)
-- **Machine-Enforced (npm run test:fitness)**:
-  1. **Domain Pure**: Tầng domain cấm import DB, framework, network, UI.
-  2. **Client/Server Isolation**: Client components cấm import server-only modules hoặc DB client.
-  3. **No Raw Env**: Cấm đọc `process.env` rải rác ngoài module schema validate tập trung (`src/lib/env.ts`).
-- **Review-Enforced (Investigation & Preflight)**:
-  4. **Server Trust Boundary**: Mọi query DB phải lọc theo `userId` từ session đã xác thực.
-  5. **Stateless Services**: Service singleton cấm lưu state người dùng trong biến `this`.
-  6. **Master Data Identity**: Mọi dữ liệu hạt giống (seed) phải có canonical identity key và upsert lũy đẳng.
-  7. **Expand-and-Contract**: Không bao giờ đổi tên hoặc xóa cột DB trong cùng 1 lần release.
-  8. **Critical Flows Sensitivity**: Thay đổi có blast radius chạm vào flow P0/P1 tự động nâng Risk >= HIGH.
-  9. **Performance & Observability Guardrails**: Cấm unbounded list query, phòng chống N+1, correlation ID và structured logs.
-  10. **Machine-Verified Fitness Pass**: Bắt buộc chạy `npm run test:fitness` pass với Exit code 0 trước khi commit.
+Checklist chỉ tóm tắt/link tới [architecture rules](fitness-functions/architecture-rules.md), [risk taxonomy](operations/critical-flows.md), [test matrix](standards/verification.md#risk-test-matrix) và [DoD/gate applicability của AGENTS](../AGENTS.md#quality-gate-applicability). Không sao chép bộ policy độc lập khi bootstrap.
+
+User/tenant queries phải dùng identity/quyền server xác thực; public/master-data/system-job có authority và scope riêng theo Rule 4. Fitness bắt buộc hay N/A được xác định theo bảng gate, không theo câu “mọi task đều chạy”.
 
 #### C. `scripts/validators/architecture-fitness.mjs` (Máy Chấm Ranh Giới)
 - Viết 1 script Node.js quét AST hoặc regex import:
@@ -200,22 +191,18 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
   - **Must Load**: Danh sách files tài liệu & interfaces bắt buộc nạp.
   - **Optional**: Files chỉ nạp khi cần đào sâu edge cases.
   - **Do Not Load**: Danh sách các module cấm nạp (ngăn ngừa phình token & ảo giác).
-  - **Token Budget**: Ngưỡng token trần cho package (thường `<= 15.000 tokens`).
+  - **Target Token Budget**: Mục tiêu riêng cho package; session budgets và overflow action theo [AGENTS §8](../AGENTS.md#context-budget).
 
 #### F. `docs/governance/knowledge-lifecycle.md` (Chống Biến Thành "Project Junkyard")
 - Quy tắc lưu trữ và dọn dẹp tài liệu theo thời gian:
-  - **Task files (`docs/tasks/**`)**: Sau 6 tháng đóng task -> di chuyển vào `archive/`.
+  - **Task records (`docs/tasks/**`)**: Dẫn tới [Knowledge Lifecycle](governance/knowledge-lifecycle.md) về `closed_at`, retention, archive eligibility và request index.
   - **Incidents (`docs/engineering-incidents/**`)**: Sau 12 tháng -> tổng hợp bài học vào `technical-lessons.md` rồi archive.
   - **ADRs (`docs/decisions/**`)**: Khi bị thay thế bởi quyết định mới -> đổi trạng thái sang `Superseded` và liên kết sang ADR mới.
 
 #### G. Chuẩn Hóa Phân Cấp Luồng Trọng Yếu (Critical Flows P0 - P4)
-- **P0 - System Survival**: Luồng sống còn (Auth, Session, Core Loop, Payment availability & security boundary). Lỗi = Blocker.
-- **P1 - Revenue & Integrity**: Toàn vẹn giao dịch thanh toán (charging, renewal, refund, ledger), đồng bộ CSDL, master data seeding.
-- **P2 - Core Business**: Các use case nghiệp vụ chính của người dùng.
-- **P3 - Convenience**: Các tính năng hỗ trợ, tiện ích bổ sung.
-- **P4 - Nice to Have**: Chỉnh chu UI/UX, micro-interactions, copy text.
-- *Nguyên tắc ưu tiên rủi ro cao nhất*: Luồng chạm nhiều cấp độ thì áp dụng cấp cao nhất (P0 > P1 > P2 > P3 > P4).
-- *Quy tắc độ nhạy theo tác động (Blast Radius)*: Bất kỳ task nào có khả năng ảnh hưởng trực tiếp/gián tiếp đến invariant/contract của luồng **P0 / P1** tự động nâng mức rủi ro lên `>= HIGH` và bắt buộc chạy full regression test.
+Nguồn canonical là [operations/critical-flows.md](operations/critical-flows.md); đường dẫn business-metrics cũ giữ compatibility pointer. Core execution loop của hệ thống thuộc P0, học/luyện tập thông thường thuộc P2; system map ánh xạ theo blast radius và mức cao nhất.
+
+Yêu cầu unit/integration/full flow regression được định nghĩa một lần tại [Verification Standard](standards/verification.md#risk-test-matrix). P0/P1 cấm Fast Track; docs ảnh hưởng policy bảo vệ các flow này vẫn dùng Standard và fitness bắt buộc. Không tự miễn gate qua project profile.
 
 ---
 
@@ -226,7 +213,7 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
 | *"Khởi tạo hệ thống theo HOW_WE_WORK.md"* | Dựng toàn bộ bộ khung thư mục + context-packages + governance + các file mẫu + script fitness function. Chủ động surface ambiguity. |
 | *"Soạn batch prompt cho yêu cầu X"* | Phân tích yêu cầu -> Chia task độc lập -> Xuất vào `docs/tasks/X.md`. Không sửa code. |
 | *"Chạy điều tra Task N"* | Đọc đúng Context Package tương ứng -> Trace code -> Phân tích Spec Impact -> Xuất `task-N-fix.md` (draft). |
-| *"Thực thi Task N"* | Kiểm tra file fix đã approved -> Cập nhật Spec -> Sửa Code -> Chạy test/fitness -> Auto commit trên branch riêng. |
+| *"Thực thi Task N"* | Kiểm tra file fix đã approved -> Cập nhật Spec -> Sửa Code -> Verify theo AGENTS §5.D -> Conditional commit trên branch riêng. |
 | *"Review / merge request vào main"* | Xác định source/target commit -> Đối chiếu ticket/spec gốc -> Trả lời đủ 10 câu trong Merge Review Gate kèm bằng chứng -> Kết luận đủ/chưa đủ điều kiện; chỉ merge khi được yêu cầu rõ ràng và gate đạt. |
-| *"Sửa nhanh lỗi chính tả / format này"* | Áp dụng Fast Track -> Sửa trực tiếp -> Chạy test -> Commit ngay. |
+| *"Sửa nhanh lỗi chính tả / format này"* | Áp dụng Fast Track hợp lệ -> Sửa -> Verify/DoD theo AGENTS -> Conditional commit. |
 

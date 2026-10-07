@@ -2,7 +2,7 @@
 
 - **Domain Scope**: `src/domain/[module]/`, `src/services/[module]/`
 - **Critical Flow Level**: `P0` | `P1` | `P2` | `P3`
-- **Target Token Budget**: `<= 15.000 tokens`
+- **Target Token Budget**: `<= 15,000 tokens` (package target; session budget/overflow theo [AGENTS §8](../../AGENTS.md#context-budget))
 
 ---
 

@@ -6,6 +6,7 @@
 - Source branch / SHA: [Thông tin đã xác minh].
 - Target branch / SHA / merge-base: [Khi review merge; target freshness chưa rõ ghi UNVERIFIED].
 - Artifact revision / baseline / Context Package / risk: [Bằng chứng].
+- Reviewer / independence basis: [Người/session khác plan author và implementer; nếu không độc lập, ghi rõ và không tính là required independent review].
 
 ## 1. Findings
 
@@ -41,4 +42,4 @@ Trạng thái gate: PASS / FAIL / UNVERIFIED / N/A có lý do. Chỉ kết luậ
 - Kết luận: [Artifact cần rework / ready for review; với merge: CHƯA ĐỦ hoặc ĐỦ ĐIỀU KIỆN MERGE].
 - Blockers / residual risks / authority: [Bước tiếp theo và người có quyền].
 
-Kết luận chỉ có hiệu lực cho revision đã review. Source/target thay đổi phải kiểm tra lại phần ảnh hưởng. Reviewer chỉ approve khi Developer đã ủy quyền; review đạt không cấp quyền merge/push/deploy.
+Kết luận chỉ có hiệu lực cho revision đã review. Source/target thay đổi phải kiểm tra lại phần ảnh hưởng. Reviewer chỉ approve khi Developer đã ủy quyền; review đạt không cấp quyền merge/push/deploy. Trigger, independence và xử lý thiếu reviewer theo [Agent Workflow](../operations/agent-workflow.md).

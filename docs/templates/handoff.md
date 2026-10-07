@@ -4,7 +4,11 @@
 
 - Yêu cầu / approved plan / spec: [Nguồn nghiệm thu].
 - Kết quả / scope / Spec Impact: [Thay đổi và lý do].
-- Trạng thái: [completed / pending verification / blocked / ready for review].
+- `approval_status`: [pending / approved / revoked].
+- `approved_by` / `approved_at` / `approved_revision`: [Giá trị thực hoặc link evidence].
+- Execution status: [not_started / in_progress / blocked / pending_verification / failed / cancelled / completed / superseded].
+- `ready for review`: [Có / Không; nhãn handoff riêng, không phải execution status].
+- `closed_at` / `merged_at`: [ISO timestamp hoặc null; merged_at chỉ sau merge thật].
 - DoD profile: [Standard / Fast Track / investigation / read-only; evidence tương ứng].
 
 ## 2. Revision Và Baseline
@@ -26,9 +30,10 @@ Ghi lệnh, exit code, local/CI và revision; manual checks ghi người chạy,
 - Điểm cần xem kỹ và lý do: [File:symbol, nghiệp vụ/security/schema/contracts].
 - Findings / manual checks / required CI còn mở: [IDs và trạng thái thật].
 - Rủi ro / giới hạn / rollback: [Thông tin khi áp dụng].
+- Independent review (nếu trigger): [Reviewer, independence basis, scope/revision, findings hoặc blocked chờ reviewer].
 - Checkpoint session chưa xong: [Đã làm, bằng chứng, blocker và bước tiếp theo].
 
 ## 5. Next Authority
 
-- Bước tiếp theo / người có quyền approve, merge hoặc deploy: [Thông tin].
+- Bước tiếp theo / người có quyền approve, merge hoặc deploy: [Thông tin; approval và authority riêng].
 - `ready for review` không đồng nghĩa merge-ready. Chỉ tuyên bố completed khi đạt DoD; không chứa secrets, auth headers hoặc PII thô.

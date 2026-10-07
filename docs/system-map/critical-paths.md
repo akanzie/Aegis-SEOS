@@ -1,6 +1,6 @@
 # System Map: Critical Paths (Các Luồng Sống Còn)
 
-Mọi thay đổi liên quan đến các luồng dưới đây tự động kích hoạt mức độ nhạy cảm **HIGH** hoặc **CRITICAL** dựa trên bán kính tác động (blast radius). Bắt buộc phải có review kỹ lưỡng và kiểm thử hồi quy.
+Đây là bản đồ flow tham chiếu, không chứng minh các flow đã tồn tại trong ứng dụng. Phân loại theo [taxonomy canonical](../operations/critical-flows.md), kiểm thử theo [ma trận canonical](../standards/verification.md#risk-test-matrix), gates theo [AGENTS §5.D](../../AGENTS.md#quality-gate-applicability). Khi blast radius chạm nhiều flow, áp dụng mức cao nhất; system map không định nghĩa lại risk.
 
 ---
 
@@ -8,12 +8,13 @@ Mọi thay đổi liên quan đến các luồng dưới đây tự động kíc
 - **Mức độ**: `P0 - Critical`
 - **Mô tả**: Tiếp nhận thông tin đăng nhập, xác thực phiên làm việc (Session/JWT), giải mã danh tính người dùng và gán `userId` tin cậy.
 - **Ranh giới an toàn**:
-  - `userId` dùng để query DB chỉ được lấy từ Server Context đã được chứng thực.
-  - Cấm chấp nhận `userId` tùy tiện từ request body/params.
+  - Query user/tenant lấy identity và quyền từ server context đã xác thực theo [Rule 4](../fitness-functions/architecture-rules.md#rule-server-trust-boundary).
+  - Public/master-data/system-job phải có authority và scope tương ứng; client params không cấp quyền.
 
-## 2. Core Business Loop (Vòng Lặp Nghiệp Vụ Cốt Lõi)
-- **Mức độ**: `P0 - Critical`
-- **Mô tả**: Luồng tạo ra giá trị cốt lõi của ứng dụng (ví dụ: tiến trình luyện tập, luồng học, xử lý dữ liệu chính).
+## 2. Core Execution Loop Và Core Business Flow
+- **Core execution loop**: `P0 - CRITICAL`; vòng điều phối/thực thi sống còn của hệ thống, lỗi làm hệ thống dừng hoặc mất kiểm soát an toàn.
+- **Core business flow**: `P2 - MEDIUM`; use case chính như học/luyện tập, lỗi gián đoạn use case nhưng hệ thống vẫn hoạt động. Nếu thay đổi chạm thêm Auth/session hoặc persistence integrity thì nâng mức theo taxonomy.
+- **Ánh xạ thực tế**: Xác nhận implementation, dependency và blast radius trong task/profile trước phân loại; không dùng từ “core” để tự xếp use case P0.
 - **Ranh giới an toàn**:
   - Logic tính toán phải nằm ở Tầng Domain thuần túy.
   - Phải có bộ Unit test bao phủ các phân lớp invariant và edge-case classes đã xác định trong spec/task (boundary values, invalid input, chia cho 0, overflow/underflow, null/empty states).

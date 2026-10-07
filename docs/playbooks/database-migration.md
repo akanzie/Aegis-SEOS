@@ -17,11 +17,11 @@ Tuyệt đối **KHÔNG** xóa hoặc đổi tên cột trong một release duy 
 - Viết script idempotent để đồng bộ dữ liệu cũ từ `old_column` sang `new_column`.
 - Xác minh dữ liệu khớp 100% giữa 2 cột.
 
-### Phase 3: Chuyển Đổi Đọc (Contract - Read Transition)
+### Phase 3: Chuyển Đổi Đọc (Read Transition)
 - Cập nhật code ứng dụng chuyển sang đọc hoàn toàn từ `new_column`.
 - Chỉ ghi vào `new_column`.
 
-### Phase 4: Thu Hẹp (Contract - Deprecate & Drop)
+### Phase 4: Thu Hẹp (Contract)
 - Sau khi kiểm tra ổn định trong production ít nhất 1 chu kỳ release:
 - Tạo migration xóa bỏ `old_column`.
 

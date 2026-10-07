@@ -6,7 +6,7 @@ Playbook này hướng dẫn cách thực hiện một session điều tra (Inve
 
 ## Nguyên Tắc Cốt Lõi
 - **Investigation Session chỉ xuất tài liệu phân tích, KHÔNG sửa code.**
-- Giữ Token Budget trong ngưỡng `<= 30k tokens`.
+- Session budget và overflow action theo [AGENTS §8](../../AGENTS.md#context-budget).
 - Chỉ đọc các files liên quan trực tiếp đến luồng bị lỗi (Context Package).
 - Áp dụng [Agent Workflow](../operations/agent-workflow.md) và [Task Authoring](../task-authoring/README.md). Nếu thiếu package, ghi rõ và trace tối thiểu từ task/spec/boundaries.
 
@@ -25,43 +25,7 @@ Playbook này hướng dẫn cách thực hiện một session điều tra (Inve
 - Kiểm tra xem lỗi có liên quan đến ranh giới kiến trúc hoặc dữ liệu seed/migration không.
 
 ### Bước 3: Đánh Giá Tác Động Nghiệp Vụ (Spec Impact Assessment)
-Xác định một trong 4 cấp độ:
-- **`NONE`**: Code viết sai so với spec đã cam kết. Cần sửa code.
-- **`CLARIFICATION`**: Spec chưa diễn đạt rõ edge case này. Cần bổ sung spec giải thích rõ.
-- **`CHANGE`**: Sửa lỗi này kéo theo thay đổi luồng nghiệp vụ. Cần cập nhật spec trước/song song.
-- **`CONFLICT`**: Spec và code mâu thuẫn sâu sắc. Cần Dev đưa ra phán quyết.
+Phân loại theo định nghĩa canonical trong [Task Authoring — Spec Impact](../task-authoring/README.md#spec-impact). Thiếu mô tả không tự chứng minh behavior đã được xác nhận; dừng và đưa vấn đề chưa rõ vào Open Issues.
 
 ### Bước 4: Xuất File Fix Draft (`docs/tasks/<request-name>/task-N-fix.md`)
-Tạo file fix với metadata chuẩn mực:
-
-```markdown
----
-task_id: task-N
-title: "Mô tả ngắn gọn lỗi"
-status: draft
-spec_impact: NONE # [NONE | CLARIFICATION | CHANGE | CONFLICT]
-risk_level: LOW # [TRIVIAL | LOW | MEDIUM | HIGH | CRITICAL]
-critical_flow: P3
-depends_on: []
-approved_by: null
-approved_at: null
-target_files:
-  - src/services/example.ts
----
-
-# Task Fix: [Tiêu Đề]
-
-## 1. Root Cause
-Giải thích cụ thể tại sao lỗi xảy ra, trích dẫn file và dòng code.
-
-## 2. Proposed Solution (Phẫu Thuật Code Tối Thiểu)
-Mô tả chính xác các thay đổi cần thực hiện. Tránh refactor lan man ngoài scope.
-
-## 3. Verification & Testing Plan
-- Test case cần thêm để tái hiện và chặn hồi quy.
-- Lệnh chạy kiểm tra: `npm test`, `npm run test:fitness`.
-
-## 4. AC, Blast Radius & Open Issues
-- Ánh xạ yêu cầu/AC sang spec, callers/contracts và test matrix thực tế.
-- Ghi compatibility/rollback nếu áp dụng; còn quyết định mở thì giữ draft và báo Developer.
-```
+Dùng đầy đủ [Task fix template](../templates/task-fix.md), cùng [Batch prompt](../templates/batch-prompt.md) khi cần. Task draft ghi metadata, baseline/evidence, root cause, scope/AC, Spec Impact, verification matrix, Open Issues và approval record. Nội dung trong SOP này là yêu cầu quy trình, không phải một template rút gọn.

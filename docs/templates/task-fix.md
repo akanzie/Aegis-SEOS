@@ -1,6 +1,10 @@
 ---
 task_id: task-N
-status: draft
+approval_status: pending
+approved_revision: null
+execution_status: not_started
+closed_at: null
+merged_at: null
 critical_flow: "[P0 | P1 | P2 | P3 | P4]"
 risk_level: "[CRITICAL | HIGH | MEDIUM | LOW | TRIVIAL]"
 spec_impact: "[NONE | CLARIFICATION | CHANGE | CONFLICT]"
@@ -54,13 +58,21 @@ Ghi PASS / FAIL / SKIPPED / NOT_RUN / BLOCKED / N/A có lý do. Manual checks gh
 | :--- | :--- | :--- | :--- |
 | [Mục còn mở hoặc không có] | [Thông tin] | [Owner] | [Pending / quyết định đã xác nhận] |
 
-- Plan revision được duyệt: [Revision hoặc bản ghi nhận diện nội dung].
-- Approval evidence: [Developer hoặc reviewer được ủy quyền, thời điểm, nguồn approval].
-- Chỉ chuyển `approved` khi đã có approval rõ ràng và giải quyết các vấn đề cần quyết định.
+- Plan revision được duyệt (`approved_revision`): [Revision hoặc bản ghi nhận diện nội dung].
+- Approval evidence: [Developer hoặc reviewer được ủy quyền, timestamp có timezone, nguồn approval].
+- Chỉ đặt `approval_status: approved` khi có approval rõ ràng đúng revision và giải quyết các vấn đề cần quyết định. `execution_status` chuyển độc lập theo Agent Workflow.
 
 ## 6. Execution Checkpoint / Handoff
+
+### Scope change (khi áp dụng)
+
+- Current diff/branch/HEAD/baseline và blocker: [Evidence; giữ diff/checkpoint].
+- Change request / AC-contract-risk-dependencies bị ảnh hưởng: [Delta và lý do].
+- Approval/evidence nào bị revoke, phần nào còn hiệu lực: [Revision/scope; lưu lịch sử].
+- Plan/AC/verification cập nhật, authority duyệt delta và reviewer: [Evidence/revision].
+- Re-verification và next action: [Checks cần chạy trước resume].
 
 - Đã làm / checks đã chạy / findings còn mở: [Trạng thái thật và bằng chứng].
 - Branch / revision / staged scope / conditional commit: [Thông tin đã xác minh].
 - DoD / bước tiếp theo / authority: [Pending items; link handoff khi cần].
-- Chỉ chuyển `completed` khi đạt Standard DoD; không để skipped/not run thành PASS.
+- Chỉ chuyển `execution_status: completed` khi đạt Standard DoD, lifecycle review và close sequence; không để skipped/not run thành PASS.

@@ -4,6 +4,12 @@ File mẫu riêng để copy: [ADR template](../templates/adr.md). Giữ `status
 
 Thư mục này ghi nhận các quyết định kiến trúc quan trọng có tầm ảnh hưởng lâu dài.
 
+## Authority Trong Technical HOW
+
+Theo [AGENTS §0](../../AGENTS.md), Accepted ADR còn hiệu lực là nguồn quyết định kiến trúc trong Technical HOW. Approved task quyết định scope/AC của công việc hiện hành, không tự supersede ADR; thay đổi quyết định kiến trúc cần ADR mới được owner chấp thuận và trỏ supersedes/superseded_by rõ ràng. Proposed/Superseded/Deprecated ADR không là quyết định hiện hành.
+
+Khi ADR được accepted, đồng bộ invariants/standards, system map, technical architecture và profile/validator mapping bị ảnh hưởng trước triển khai. Nếu tài liệu dẫn xuất lệch ADR, phải nêu conflict và đồng bộ, không tự pha trộn. ADR không làm yếu safety/security hoặc tự đổi functional spec. Profile chỉ ghi công cụ/capability, không cấp quyền hoặc miễn gate.
+
 ---
 
 ## 1. Điều Kiện Bắt Buộc Tạo ADR (ADR Mandatory Triggers)
@@ -18,6 +24,7 @@ Developer và AI Agent **bắt buộc phải tạo ADR** trước khi bắt tay 
 
 ---
 
+<a id="adr-lifecycle"></a>
 ## 2. Định Dạng Đặt Tên & Vòng Đời Quyết Định (Lifecycle & Ownership)
 
 - **Định dạng file**: `ADR-XXXX-<slug-tieu-de>.md` (ví dụ: `ADR-0001-drizzle-orm-adoption.md`).
@@ -28,32 +35,6 @@ Developer và AI Agent **bắt buộc phải tạo ADR** trước khi bắt tay 
 
 ---
 
-## 3. Mẫu ADR Chuẩn
+## 3. Nội Dung ADR
 
-```markdown
----
-adr_id: ADR-XXXX
-title: "[Tiêu Đề Quyết Định]"
-status: proposed # [proposed | accepted | superseded | deprecated]
-decision_owner: "@username"
-date: YYYY-MM-DD
-supersedes: null # hoặc "ADR-YYYY"
-superseded_by: null # hoặc "ADR-ZZZZ"
----
-
-# ADR-XXXX: [Tiêu Đề Quyết Định]
-
-- **Trạng thái**: Proposed | Accepted | Deprecated | Superseded
-- **Chủ trì quyết định (Owner)**: @username
-- **Ngày**: YYYY-MM-DD
-
-## Bối Cảnh (Context)
-Vấn đề chúng ta đang gặp phải là gì? Những yếu tố và ràng buộc nào thúc đẩy quyết định này?
-
-## Quyết Định (Decision)
-Chúng ta quyết định chọn giải pháp nào và triển khai ra sao?
-
-## Đánh Đổi & Hệ Quả (Consequences & Trade-offs)
-- **Tích cực (Pros)**: Lợi ích đạt được về kiến trúc, hiệu năng hoặc vận hành.
-- **Đánh đổi / Rủi ro (Cons)**: Chi phí bảo trì, độ phức tạp phát sinh, lộ trình di trú.
-```
+Dùng [ADR template đầy đủ](../templates/adr.md) để tạo record. ADR cần ghi context/bằng chứng, options và quyết định được owner chấp thuận, consequences/recovery, ownership và lifecycle fields. Phần mô tả này là hướng dẫn, không phải template thay thế.

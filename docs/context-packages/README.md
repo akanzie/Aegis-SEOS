@@ -13,14 +13,14 @@ Mỗi file trong `docs/context-packages/<domain>.md` tuân theo cấu trúc:
 1. **Must Load (Bắt Buộc Đọc)**: Danh sách tối thiểu các files đặc tả nghiệp vụ, ranh giới và interfaces.
 2. **Optional (Đọc Khi Cần Thiết)**: Các files bổ trợ chỉ đọc khi gặp edge case liên quan.
 3. **Do Not Load (Tuyệt Đối Cấm Đọc)**: Các module ngoại vi không liên quan (ví dụ: đang làm Auth thì cấm đọc Billing, Media, Analytics).
-4. **Token Budget Target**: Ngân sách token tối đa cho context session (thường `<= 15.000 tokens`).
+4. **Target Token Budget**: Mục tiêu kích thước riêng của package (mặc định `<= 15,000` tokens), không phải hard cap của session. Session bands và overflow action canonical nằm trong [AGENTS §8](../../AGENTS.md#context-budget).
 
 ---
 
 ## 2. Danh Sách Context Packages Có Sẵn
 
 - [template.md](template.md) — Mẫu chuẩn để tạo Context Package mới.
-- [auth-context.md](auth-context.md) — Context Package cho phân hệ Authentication & Session.
+- [auth-context.md](auth-context.md) — Reference package cho Authentication & Identity; file tự ghi rõ trạng thái mẫu vì repo hiện không có runtime auth domain đã xác minh.
 
 ## 3. Package thiếu hoặc chưa đủ
 

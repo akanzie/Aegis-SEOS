@@ -14,14 +14,14 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 1. **Safety, Security & Boundary Integrity**: An toàn hệ thống, bảo mật dữ liệu, quyền riêng tư, ranh giới kiến trúc (Mục 2 & Mục 6).
 2. **Explicit Approved Developer Override**: Quyết định ghi đè nghiệp vụ rõ ràng của Developer trong prompt hiện tại.  
    *(Lưu ý: Tin nhắn chat thông thường chỉ ghi đè `fn` specs khi Dev tuyên bố rõ ràng đây là thay đổi nghiệp vụ; không tự ý suy diễn lời nói bóng gió để phá vỡ spec).*
-3. **Approved Task Decisions (`docs/tasks/**/task-*-fix.md`, `task-*-feat.md`)**: Các phân tích và quyết định đã được duyệt (`status: approved`).
+3. **Approved Task Decisions (`docs/tasks/**/task-*-fix.md`, `task-*-feat.md`)**: Các quyết định có `approval_status: approved`, `approved_by`, `approved_at`, `approved_revision` nhận diện đúng scope/revision. Approval độc lập `execution_status` và được giữ sau completed; compatibility status cũ theo [Agent Workflow](docs/operations/agent-workflow.md), không suy ra approval từ completed.
 4. **Functional Specifications (`docs/main_docs/<ACTIVE_VERSION>/fn/`)**: Nguồn sự thật cho logic nghiệp vụ (Business "WHAT").
 5. **Project Memory (`docs/project-memory/`)**:
    - `rejected-solutions.md`: Các giải pháp đã bị bác bỏ (cấm đề xuất lại).
    - `known-pitfalls.md`: Các bẫy kỹ thuật đã được cảnh báo.
    - `technical-lessons.md`: Các bài học xương máu đã đúc kết.
 6. **Acceptance Criteria (AC)**: Tiêu chí nghiệm thu được xác lập trong task active.
-7. **Architecture & Standards (`docs/system-map/`, `docs/fitness-functions/`, `docs/standards/`)**: Ranh giới kiến trúc và chuẩn mực kỹ thuật (Technical "HOW").
+7. **Architecture & Standards (Technical "HOW")**: Trong phạm vi kỹ thuật, ưu tiên Accepted ADR còn hiệu lực (`docs/decisions/`) -> invariants/standards (`docs/fitness-functions/`, `docs/standards/`) -> system map (`docs/system-map/`) -> thiết kế triển khai (`docs/architecture/`). Approved task quyết định scope/AC hiện hành, không tự thay thế Accepted ADR; nếu cần đổi kiến trúc, phải có ADR mới được chấp thuận và đồng bộ các tài liệu dẫn xuất trước triển khai. Project profile chỉ ánh xạ stack, commands và khả năng kiểm tra thực tế, không cấp quyền hoặc miễn gate. Không nguồn Technical HOW nào được làm yếu safety/security hay sửa Business WHAT ngầm.
 8. **Existing Code Conventions**: Phong cách trình bày của module đang can thiệp.
 
 *Nguyên tắc xử lý lệch pha:* Khi phát hiện code hoặc yêu cầu mâu thuẫn với `fn` specs, AI bắt buộc chỉ rõ điểm khác biệt và đề xuất cập nhật spec song song/trước khi sửa code. Tuyệt đối không âm thầm pha trộn hai nguồn mâu thuẫn.
@@ -66,8 +66,8 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 - **Bảo toàn Baseline Repository**: Nếu working tree đã có các thay đổi từ trước khi bắt đầu task, AI không được tự ý sửa, stash, reset hoặc commit các thay đổi đó. Phải ghi nhận baseline và bảo đảm không pha trộn chúng vào commit của task.
 - **Cam Kết Có Điều Kiện (Conditional Commit)**: AI **chỉ được phép commit** khi thỏa mãn **TOÀN BỘ** các điều kiện sau:
   1. **Staged Scope**: Index chỉ chứa thay đổi thuộc task; không chứa file rác, secrets hoặc thay đổi baseline. Working tree có thể còn baseline đã ghi nhận. Kiểm tra staged diff trước commit; nếu không tách được thay đổi an toàn, dùng worktree riêng hoặc báo Developer.
-  2. **Automated tests pass**: Toàn bộ automated tests liên quan đều PASS (`npm test` nếu có test runner).
-  3. **Architecture fitness pass**: Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
+  2. **Automated tests pass**: Các automated tests bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) đều PASS; mục N/A có lý do được ghi trong evidence.
+  3. **Architecture fitness pass**: Gate fitness theo [bảng áp dụng](#quality-gate-applicability) PASS với Exit code 0 khi bắt buộc; N/A chỉ trong trường hợp bảng cho phép, không dùng thiếu validator để miễn gate.
   4. **No open assumptions**: Không còn giả định mở (open assumptions) hay xung đột chưa giải quyết.
   5. **Valid task branch**: Đang ở trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), tuyệt đối không phải `main`/`master`.
   6. **Post-commit clean tree**: Sau khi commit, `git status --short` phải không còn thay đổi chưa được xử lý thuộc phạm vi task.
@@ -92,9 +92,9 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
 Áp dụng cho mọi tính năng mới, thay đổi nghiệp vụ, sửa lỗi phức tạp, đụng chạm schema/DB, đa module hoặc luồng rủi ro cao:
 ```
 [BƯỚC 1: SOẠN BATCH PROMPT]  ──▶  [BƯỚC 2: SESSION ĐIỀU TRA]  ──▶  [BƯỚC 3: SESSION THỰC THI]
-  Tạo 1 file prompt tập trung      Trace code, đánh giá Spec Impact     Kiểm tra approved -> Sửa spec
-  tại docs/tasks/<request>.md       Xuất task-N-fix.md (status: draft)   Sửa code phẫu thuật -> Run fitness
-  Không sửa code sớm.              Dev duyệt -> status: approved        Conditional Commit trên task branch
+  Tạo 1 file prompt tập trung      Trace code, đánh giá Spec Impact     Kiểm tra approval -> Sửa spec
+  tại docs/tasks/<request>.md       Xuất plan (approval: pending)       Sửa code phẫu thuật -> Run fitness
+  Không sửa code sớm.              Dev duyệt revision -> approved       Conditional Commit trên task branch
 ```
 
 ### B. Luồng Nhanh (Fast Track) & Rào Chắn Dừng Khẩn Cấp (Hard Stop)
@@ -103,7 +103,8 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
   - Chỉnh sửa CSS thuần túy không thay đổi cấu trúc DOM / layout tree.
   - Viết bổ sung Unit test thuần túy không sửa logic runtime.
   - Task read-only: Giải thích kiến trúc, trace code, review logic.
-- **Chu trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi mã nguồn)`.
+- **Chu trình Fast Track**: `Điều tra nhanh -> Sửa đổi -> Verify theo bảng áp dụng gate -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi cần lưu trữ)`.
+- **Căn cứ EXECUTE**: Fast Track cần yêu cầu trực tiếp của Developer với scope rõ và đủ điều kiện §3.B; không cần approved Standard plan riêng. Standard cần approval bao phủ revision/scope. Quyền mode/artifact tại [Agent Workflow](docs/operations/agent-workflow.md).
 - **RÀO CHẮN DỪNG KHẨN CẤP (FAST TRACK HARD STOP)**:
   > [!CAUTION]
   > Fast Track **lập tức vô hiệu lực** nếu phát sinh bất kỳ yếu tố nào sau đây (bắt buộc quay lại Quy trình Chuẩn 3 bước):
@@ -112,6 +113,8 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
   > 3. Thay đổi logic Authentication hoặc Authorization.
   > 4. Thay đổi logic nghiệp vụ (Business logic runtime).
   > 5. Chạm vào bất kỳ thành phần nào thuộc luồng **P0** hoặc **P1** (dựa trên blast radius).
+
+Hard Stop loại trừ Fast Track; checkpoint và quay về Standard trước phần sửa ngoài phạm vi. Nó không cấm Standard task đã duyệt sửa thành phần đó trong scope. Escalation tại §4 áp dụng riêng cho mọi track và dừng phần phụ thuộc quyết định còn mở.
 
 ---
 
@@ -134,38 +137,54 @@ AI Agent bắt buộc **DỪNG LẠI NGAY LẬP TỨC**, không tự ý đoán h
 6. **Irreversible Operations**: Thao tác xóa cột, drop table, purge cache diện rộng không thể rollback an toàn tức thì.
 7. **Architectural Trade-offs**: Phân vân kỹ thuật nền tảng (Queue vs Cron, Redis vs DB, Event-Driven vs Sync, chia module mới). Bắt buộc dừng lại, phân tích trade-offs và yêu cầu tạo ADR theo [docs/decisions/README.md](docs/decisions/README.md).
 
-Dừng ngay hành động phụ thuộc vào quyết định còn mở, báo Developer và ghi bằng chứng. Trong INVESTIGATE/READ_ONLY chỉ tiếp tục khảo sát độc lập khi an toàn; không tự chốt mâu thuẫn. Trong EXECUTE dừng sửa code theo [Agent Workflow](docs/operations/agent-workflow.md).
+Dừng ngay hành động phụ thuộc vào quyết định còn mở, báo Developer và ghi bằng chứng. Trong INVESTIGATE/READ_ONLY chỉ tiếp tục khảo sát độc lập khi an toàn; không tự chốt mâu thuẫn. Trong EXECUTE dừng phần phụ thuộc trigger, giữ diff/checkpoint theo [Agent Workflow](docs/operations/agent-workflow.md).
 
 ---
 
 ## 5. Tiêu Chuẩn Hoàn Tất (Definition of Done - DoD)
 
-Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp ứng **DoD profile tương ứng**:
+Execution chỉ completed (`execution_status: completed`) khi đạt **DoD profile tương ứng**. Approval/status semantics và transition ownership theo [Agent Workflow](docs/operations/agent-workflow.md):
 
 ### A. Standard DoD (Áp dụng cho Standard 3-Step Path)
-1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) đã được Developer duyệt (`status: approved`).
+1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) có approval record hợp lệ cho revision/scope hiện hành (`approval_status: approved`); agent không tự duyệt. Approval độc lập execution và được giữ khi completed.
 2. **Spec Synchronized**: Đặc tả nghiệp vụ (`docs/main_docs/<ACTIVE_VERSION>/fn/`) đã được cập nhật đồng bộ nếu có thay đổi hành vi (`Spec Impact: CHANGE/CLARIFICATION`).
-3. **Automated Tests Pass**: Mọi test suites liên quan đều PASS (nếu dự án có cấu hình test runner).
-4. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` thực thi thành công với Exit code 0.
+3. **Automated Tests Pass**: Các checks bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) và [ma trận kiểm thử](docs/standards/verification.md#risk-test-matrix) đã PASS; N/A có lý do được ghi rõ.
+4. **Architecture Fitness Pass**: Gate Standard theo [bảng áp dụng](#quality-gate-applicability) thực thi thành công với Exit code 0.
 5. **No Open Assumptions**: Toàn bộ giả định mở hoặc xung đột kiến trúc/nghiệp vụ đã được giải quyết triệt để.
 6. **Documentation & Memory Updated**: Đã cập nhật ADR (nếu chạm trigger), pitfalls/lessons (nếu phát hiện bẫy mới).
 7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), không sót file nhạy cảm hay file rác.
-8. **Evidence & Handoff**: Mỗi AC có kết quả và bằng chứng theo [Verification Standard](docs/standards/verification.md); hoàn tất kiểm tra bắt buộc, gồm kiểm tra thủ công nếu áp dụng. Bàn giao theo [Handoff Contract](docs/operations/handoff-contract.md). Không xem skipped/not run là PASS.
+8. **Evidence & Handoff**: Mỗi AC có kết quả và bằng chứng theo [Verification Standard](docs/standards/verification.md); hoàn tất kiểm tra bắt buộc, gồm independent review và kiểm tra thủ công khi áp dụng theo [Agent Workflow](docs/operations/agent-workflow.md). Bàn giao theo [Handoff Contract](docs/operations/handoff-contract.md). Không xem skipped/not run là PASS.
 
 ### B. Fast Track DoD (Áp dụng cho Fast Track Changes)
 1. **Scope Validity**: Phạm vi thay đổi vẫn nằm trọn vẹn trong các trường hợp cho phép của Fast Track.
 2. **No Hard Stop**: Không phát sinh bất kỳ điều kiện nào thuộc Fast Track Hard Stop.
 3. **Minimal Surgical Diff**: Diff chỉ chứa thay đổi tối thiểu cần thiết cho task.
-4. **Verification Pass**: Các kiểm tra phù hợp với loại thay đổi đã PASS (format, lint, unit tests liên quan).
-5. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` PASS với Exit code 0 nếu script tồn tại và thay đổi có khả năng chạm vào source code hoặc ranh giới kiến trúc.
+4. **Verification Pass**: Các checks bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) đã PASS, có evidence tương xứng với thay đổi.
+5. **Architecture Fitness Pass**: Fitness PASS với Exit code 0 khi [bảng áp dụng](#quality-gate-applicability) yêu cầu; N/A được ghi rõ lý do khi bảng cho phép.
 6. **No Open Assumptions**: Không còn giả định mở hoặc xung đột chưa được giải quyết.
 7. **Conditional Commit**: Commit cục bộ trên task branch hợp lệ nếu task tạo ra thay đổi cần lưu trữ vào kho mã nguồn.
 8. **Evidence & Handoff**: Báo cáo kiểm tra và bằng chứng tương xứng phạm vi; không bỏ qua kiểm tra thủ công cần thiết chỉ vì dùng Fast Track.
 
 ### C. Phân Định Kết Quả Theo Vòng Đời Task (Lifecycle Outputs)
-- **Investigation Session**: Hoàn tất khi tài liệu phân tích `task-N-fix.md` hoặc `task-N-feat.md` được tạo với `status: draft`. Không yêu cầu commit code.
+- **Investigation Session**: Hoàn tất khi plan `task-N-fix.md` hoặc `task-N-feat.md` được tạo với `approval_status: pending`, `execution_status: not_started`. Không yêu cầu commit code; đây không phải execution completed.
 - **Execution Task**: Hoàn tất khi đáp ứng Standard DoD (hoặc Fast Track DoD tương ứng).
 - **Read-only Task**: Hoàn tất khi báo cáo, phân tích và bằng chứng xác minh đã được cung cấp (không tạo commit code).
+
+<a id="quality-gate-applicability"></a>
+### D. Bảng Áp Dụng Quality Gates (Canonical)
+
+AGENTS sở hữu applicability và quyền miễn áp dụng; [Verification Standard](docs/standards/verification.md#risk-test-matrix) sở hữu ma trận kiểm thử và cách ghi evidence. Project profile ánh xạ từng gate sang command thực tế của stack.
+
+| Loại công việc | Automated tests / checks | Architecture fitness | Commit |
+| :--- | :--- | :--- | :--- |
+| Standard EXECUTE, kể cả docs ảnh hưởng policy P0/P1 | Chạy các suites liên quan nếu có test runner, checks theo ma trận risk và diff; docs phải review links/tính nhất quán | Bắt buộc PASS, Exit code 0 | Có thay đổi cần lưu trữ: conditional commit theo §2.C |
+| Fast Track có source changes (CSS, comments/format source, unit tests thuần) hoặc có khả năng ảnh hưởng ranh giới kiến trúc | Checks phù hợp với diff, tests liên quan; UI cần manual checks khi áp dụng | Bắt buộc PASS, Exit code 0 | Theo §2.C |
+| Fast Track docs-only, không ảnh hưởng source/ranh giới kiến trúc và không chạm Hard Stop | Diff, links/format, tính nhất quán; tests runtime N/A nếu không có tác động, ghi lý do | N/A có lý do; có thể chạy thêm nếu hữu ích | Theo §2.C |
+| COMPOSE / INVESTIGATE / READ_ONLY / REVIEW thuần túy | Checks cần cho kết luận khảo sát/review; execution gates N/A vì không thực thi thay đổi | N/A cho phase thuần túy; review vẫn phải xác minh evidence gate của implementation khi áp dụng | Không commit code theo profile đầu ra; quyền artifact theo workflow |
+
+- Thiếu validator hoặc command tương đương ở hàng bắt buộc là **BLOCKED / thiếu gate**, không phải N/A; phải cấu hình gate trước khi tuyên bố đạt DoD. Không bịa script.
+- Không có test runner: ghi N/A cho automated suite, vẫn phải thực hiện checks/manual evidence phù hợp với ma trận risk. Thiếu môi trường cho integration/manual check bắt buộc là BLOCKED, không phải N/A.
+- Risk xác định theo blast radius trước khi dùng bảng; docs điều khiển quyền/gate P0/P1 vẫn là Standard. N/A phải có căn cứ từ diff/profile; SKIPPED/NOT_RUN không phải PASS. Gate remote CI bắt buộc phải được xác minh trên đúng commit.
 
 ---
 
@@ -179,7 +198,7 @@ Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy đ
 3. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`).
 
 ### B. Review-Enforced Invariants (Kiểm Định Qua Investigation, Review & Preflight)
-4. **Server Trust Boundary**: Mọi query DB phải scope theo `userId` từ session đã xác thực ở server; cấm tin cậy client params.
+4. **Server Trust Boundary**: Query dữ liệu user/tenant phải scope theo identity và quyền được server xác thực; public/master-data/system-job dùng authority và scope tương ứng theo [Rule 4](docs/fitness-functions/architecture-rules.md#rule-server-trust-boundary). Cấm lấy client params làm authority hoặc dùng nhãn public/job để bỏ kiểm tra quyền.
 5. **Stateless Services & Repositories**: Service singletons cấm lưu `userId` hay request context trong biến instance (`this.*`).
 6. **Expand-and-Contract Migrations**: Không bao giờ đổi tên hoặc drop cột cùng lúc; tuân thủ chu trình Expand -> Backfill -> Read Transition -> Contract.
 7. **Performance Guardrails**: Cấm query danh sách không giới hạn (unbounded query), chỉ query cột cần thiết trên hot path, bắt buộc phân trang, chống N+1 (xem [docs/standards/performance.md](docs/standards/performance.md)).
@@ -189,24 +208,15 @@ Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy đ
 
 ## 7. Phân Cấp Luồng Trọng Yếu & Độ Nhạy Rủi Ro (Critical Flows P0 - P4)
 
-| Mức Độ | Tên Luồng | Phạm Vi Điển Hình | Tác Động Khi Lỗi | Auto Risk & Ràng Buộc |
-| :--- | :--- | :--- | :--- | :--- |
-| **P0** | **System Survival** | Xác thực, session context, core execution loop, tính sẵn sàng & an toàn cổng thanh toán (Payment availability, webhook authenticity, unauthorized charge prevention) | Hệ thống tê liệt hoàn toàn hoặc mất kiểm soát bảo mật | **CRITICAL** (Cấm Fast Track, full regression test) |
-| **P1** | **Revenue & Integrity** | Toàn vẹn giao dịch thanh toán (Charging, renewal, refund, ledger updates, reconciliation, idempotency), đồng bộ CSDL, master data seeding | Mất doanh thu, sai lệch DB vĩnh viễn | **HIGH** (Cấm Fast Track, integration test bắt buộc) |
-| **P2** | **Core Business** | Luồng bài học, tiến trình luyện tập chính, quản lý tài nguyên nghiệp vụ chính | Tính năng chính bị gián đoạn nhưng hệ thống còn hoạt động | **MEDIUM** (Unit + Integration test) |
-| **P3** | **Convenience** | Tìm kiếm nâng cao, bộ lọc phụ, xuất file CSV/PDF, push notification | Giảm tính tiện dụng, có giải pháp thay thế | **LOW** (Unit test chuẩn) |
-| **P4** | **Nice to Have** | UI polish, CSS, typo, micro-copy | Thẩm mỹ, không đổi hành vi | **TRIVIAL** (Được dùng Fast Track) |
+Nguồn chuẩn duy nhất cho P0–P4, mapping risk, tie-breaking và impact escalation là [Critical Flows](docs/operations/critical-flows.md). [System map](docs/system-map/critical-paths.md) ánh xạ flow cụ thể; [Verification Standard](docs/standards/verification.md#risk-test-matrix) quy định test matrix.
 
-> [!IMPORTANT]
-> **Nguyên tắc ưu tiên mức rủi ro cao nhất (Tie-Breaking Rule):**  
-> Nếu một luồng, tính năng hoặc tác vụ đồng thời chạm vào nhiều cấp độ, bắt buộc áp dụng cấp độ rủi ro cao nhất (**P0 > P1 > P2 > P3 > P4**).
-
-*Luật nâng rủi ro theo tác động (Impact-Based Risk Escalation):*  
-Rủi ro được phân loại theo hành vi và bán kính tác động (blast radius), không chỉ theo vị trí file. Một task được tự động nâng lên `risk_level: HIGH` hoặc `CRITICAL` nếu thay đổi có thể ảnh hưởng trực tiếp hoặc gián tiếp đến invariant, contract hoặc runtime execution của luồng **P0 / P1**, bắt buộc tuân thủ Standard 3-Step Path.
+P0 bảo vệ system survival/security và core execution loop của hệ thống; luồng học/luyện tập thông thường là P2. Nếu blast radius chạm invariant/contract/runtime P0 hoặc P1, áp dụng mức cao nhất theo taxonomy và bắt buộc Standard, cấm Fast Track. Applicability của gate theo §5.D; không hạ risk chỉ vì file là Markdown.
 
 ---
 
 ## 8. Quản Lý Ngân Sách Ngữ Cảnh & Context Packages (Context Budget)
+
+<a id="context-budget"></a>
 
 Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh gọn để chống ảo giác:
 
@@ -215,7 +225,9 @@ Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh g
 | **Low** | <= 10k tokens | Fast Track, sửa typo, cập nhật docs, viết unit test đơn |
 | **Medium** | <= 30k tokens | Investigation session, phân tích 1 task độc lập, audit file |
 | **High** | <= 60k tokens | Execution session liên quan nhiều module, refactor tầng |
-| **Critical** | > 60k tokens | **Cảnh báo**: Cần ngắt session hoặc bẻ nhỏ task thành các sub-tasks |
+| **Overflow** | > 60k tokens | **Bắt buộc**: Dừng nạp context, ghi checkpoint, rồi chia nhỏ task hoặc tiếp tục trong session mới. Không cần approval riêng chỉ vì overflow. |
+
+Mức session là ngân sách theo phạm vi công việc; các hàng Low/Medium/High dùng ngưỡng trên làm giới hạn trên tương ứng. `Target Token Budget` trong Context Package là mục tiêu riêng (mặc định `<= 15,000` tokens), không phải hard cap cho session. Nếu vượt target, thu hẹp package/nạp theo nhu cầu; nếu session vượt 60k, áp dụng overflow action ở trên.
 
 **Quy Tắc Context Packages (`docs/context-packages/`):**
 - Trước khi thực hiện task, AI bắt buộc tìm và nạp Context Package tương ứng (ví dụ: `auth-context.md`).
@@ -228,33 +240,30 @@ Mỗi session AI là một tiến trình dùng một lần. Giữ context tinh g
 
 Để ngăn ngừa việc sau 2-5 năm kho tri thức biến thành "bãi rác tài liệu" (Document Cemetery/Junkyard), toàn bộ dự án tuân thủ [docs/governance/knowledge-lifecycle.md](docs/governance/knowledge-lifecycle.md):
 
-1. **Completed Tasks (`docs/tasks/**`)**: Sau **6 tháng** hoàn thành -> chuyển vào `docs/archive/tasks/<YYYY>/`.
+1. **Task records (`docs/tasks/**`)**: Retention và điều kiện archive theo [`knowledge-lifecycle.md`](docs/governance/knowledge-lifecycle.md); dùng `closed_at`, giữ `merged_at` riêng và không archive request còn task chưa đủ điều kiện.
 2. **Resolved Incidents (`docs/engineering-incidents/**`)**: Sau **12 tháng** -> chắt lọc bài học vào `known-pitfalls.md` hoặc `technical-lessons.md` rồi chuyển vào `docs/archive/incidents/<YYYY>/`.
 3. **Superseded ADRs (`docs/decisions/**`)**: Không bao giờ xóa; cập nhật trạng thái `Superseded by ADR-XXXX` và trỏ link sang ADR mới.
 4. **Quy Tắc Cấm Nạp Archive (Zero-Archive In Context)**: AI Agent tuyệt đối **KHÔNG** được tự ý nạp tài liệu từ thư mục `docs/archive/**` vào context session trừ khi Developer yêu cầu tra cứu lịch sử cụ thể.
 
 ---
 
-## 10. Bản Đồ Tra Cứu Theo Nhu Cầu (On-Demand Routing Map)
+<a id="routing-map"></a>
+## 10. Bản Đồ Tra Cứu Theo Phase Và Trigger (On-Demand Routing Map)
 
-Khi cần tra cứu sâu, AI truy cập các điểm neo tương ứng (không nạp toàn bộ vào một lần):
+Đây là entry map duy nhất theo phase/trigger. Mở đúng owner cần thiết; không nạp toàn bộ tài liệu cùng lúc.
 
-| Lĩnh Vực | Nguồn Sự Thật Cần Tra Cứu |
+| Phase / trigger | Entry point / owner |
 | :--- | :--- |
-| **Cẩm Nang & Bootstrap** | [docs/HOW_WE_WORK.md](docs/HOW_WE_WORK.md) (Hướng dẫn toàn diện SEOS) |
-| **Mode, Approval, Review & Rework** | [docs/operations/agent-workflow.md](docs/operations/agent-workflow.md) |
-| **Soạn Yêu Cầu & Phân Rã Task** | [docs/task-authoring/README.md](docs/task-authoring/README.md) |
-| **Kiểm Chứng & Bằng Chứng AC** | [docs/standards/verification.md](docs/standards/verification.md) |
-| **Bàn Giao Task / PR** | [docs/operations/handoff-contract.md](docs/operations/handoff-contract.md) |
-| **Áp Dụng SEOS Cho Dự Án Mới / Có Sẵn** | [docs/operations/project-adoption.md](docs/operations/project-adoption.md) |
-| **10 Điều Bất Biến (One-Pager)**| [docs/operations/quick-checklist.md](docs/operations/quick-checklist.md) |
-| **Kiểm Định Trước Release** | [docs/operations/preflight-checklist.md](docs/operations/preflight-checklist.md) |
-| **Review PR/MR Trước Merge** | [Merge Review Gate: 10 câu hỏi bắt buộc](docs/operations/preflight-checklist.md#merge-review-gate) |
-| **Đặc Tả Nghiệp Vụ ("WHAT")** | `docs/main_docs/<ACTIVE_VERSION>/fn/*.md` |
-| **Ranh Giới Phân Tầng & Luồng Sống Còn** | `docs/system-map/modules.md`, `dependencies.md`, `critical-paths.md` |
-| **SOP Tác Chiến (Playbooks)** | `docs/playbooks/` (bug-investigation, feature-dev, db-migration, incident) |
-| **Máy Chấm Tự Động (Fitness)** | [docs/fitness-functions/architecture-rules.md](docs/fitness-functions/architecture-rules.md), [ci-enforcement.md](docs/fitness-functions/ci-enforcement.md) |
-| **Ký Ức Kỹ Thuật (Memory)** | `docs/project-memory/` (known-pitfalls, rejected-solutions, technical-lessons) |
-| **Quy Chuẩn Code & Tiêu Chuẩn Kỹ Thuật** | `docs/standards/` ([observability.md](docs/standards/observability.md), [performance.md](docs/standards/performance.md), README) |
-| **Quyết Định Kiến Trúc (ADR)** | [docs/decisions/README.md](docs/decisions/README.md) (Quy chế & 5 Mandatory Triggers) |
-| **Vòng Đời Tài Liệu (Governance)**| [docs/governance/knowledge-lifecycle.md](docs/governance/knowledge-lifecycle.md) |
+| New project / adoption / bootstrap | [Project Adoption](docs/operations/project-adoption.md); bootstrap instructions in [HOW_WE_WORK](docs/HOW_WE_WORK.md#ai-bootstrap) |
+| Human onboarding | [HOW_WE_WORK — Human Onboarding](docs/HOW_WE_WORK.md#human-onboarding) |
+| Session start, mode, approval, resume, review, rework | [Agent Workflow](docs/operations/agent-workflow.md) |
+| Compose request or investigate task | [Task Authoring](docs/task-authoring/README.md); artifact forms in [Templates](docs/templates/README.md) |
+| Execute / risk / gates / Git / safety | This contract, especially §§0–7; details by risk at [Critical Flows](docs/operations/critical-flows.md) and [Verification](docs/standards/verification.md) |
+| Verify AC, tests, or architecture fitness | [Verification Standard](docs/standards/verification.md); actual project commands in [Project Profile](docs/operations/project-profile.md) |
+| Handoff or merge review | [Handoff Contract](docs/operations/handoff-contract.md); [Preflight / Merge Review Gate](docs/operations/preflight-checklist.md#merge-review-gate) |
+| Production incident | [Production Incident Playbook](docs/playbooks/production-incident.md) and the approved-task/deploy boundaries it links |
+| Business behavior / technical boundary / ADR trigger | Active spec from `docs/main_docs/ACTIVE_VERSION.md`; system maps under `docs/system-map/`; [standards](docs/standards/); [ADR rules](docs/decisions/README.md) |
+| Context package, memory, or document retention | [`docs/context-packages/`](docs/context-packages/README.md); [`docs/project-memory/`](docs/project-memory/); [Knowledge Lifecycle](docs/governance/knowledge-lifecycle.md) |
+| Quick reference | [Quick Checklist](docs/operations/quick-checklist.md); it points to canonical policy owners |
+
+README and HOW_WE_WORK introduce this map and onboarding/bootstrap; they do not define a second routing map.

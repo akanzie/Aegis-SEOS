@@ -6,7 +6,7 @@ Ghi nhận các bài học đúc kết sau các đợt refactor, xử lý lỗi 
 
 ## 1. Docs-as-an-OS Giúp Loại Bỏ Ảo Giác AI Triệt Để
 - **Bài học**: Khi ép AI Agent phải tuân thủ việc đọc context từ spec (`docs/main_docs/`), hệ thống giảm thiểu tới 90% lỗi phỏng đoán sai logic nghiệp vụ.
-- **Áp dụng**: Không bao giờ để AI tự "đoán" hành vi nếu tài liệu chưa mô tả. Hãy dùng `Spec Impact: CLARIFICATION` để bổ sung tài liệu trước.
+- **Áp dụng**: Không suy ra hành vi còn thiếu từ code hoặc phỏng đoán. Phân loại `Spec Impact` theo định nghĩa canonical trong [Task Authoring](../task-authoring/README.md#spec-impact); thiếu mô tả tự nó không chứng minh behavior đã được xác nhận để chọn `CLARIFICATION`.
 
 ## 2. Máy Chấm Tự Động Rẻ Hơn Rất Nhiều So Với Code Review Thủ Công
 - **Bài học**: Việc kiểm tra quy tắc "Domain không import DB" bằng mắt thường thường xuyên bị bỏ sót trong các PR gấp.

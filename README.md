@@ -10,13 +10,14 @@
 ## 🌟 Tính Năng & Rào Chắn Nổi Bật
 
 - **[Hiến pháp Tối cao](AGENTS.md)**: Bản thỏa ước vận hành chuẩn mực (Unified Operating Contract) cho cả Developer và AI Agent, xác lập thứ bậc nguồn sự thật (Hierarchy of Truth) và các ranh giới bất biến.
+- **Bắt đầu theo phase/trigger**: Dùng [AGENTS §10 routing map](AGENTS.md#routing-map) để tới đúng tài liệu owner. [HOW_WE_WORK](docs/HOW_WE_WORK.md) tách riêng human onboarding và bootstrap khi được yêu cầu.
 - **[Máy Chấm Ranh Giới Tự Động](docs/fitness-functions/architecture-rules.md)**: Xác thực các luật Machine-enforced qua `npm run test:fitness` — ngăn chặn sớm việc vi phạm tính thuần khiết của tầng Domain, rò rỉ server secrets sang Client components, hoặc gọi trực tiếp biến môi trường không qua schema.
-- **[Ngăn Ngừa Ảo Giác Với Context Packages](docs/context-packages/README.md)**: Gói ngữ cảnh thiết kế tinh gọn theo từng task (khuyến nghị <= 15k tokens); toàn bộ Investigation Session duy trì trong ngưỡng an toàn (<= 30k tokens).
+- **[Ngăn Ngừa Ảo Giác Với Context Packages](docs/context-packages/README.md)**: Package có target riêng; session budget và overflow action theo [AGENTS §8](AGENTS.md#context-budget).
 - **Phân Tách Definition of Done (DoD)**:
   - **Standard DoD**: Áp dụng cho Standard 3-Step Path đối với tính năng mới, thay đổi nghiệp vụ, sửa lỗi phức tạp hoặc can thiệp schema.
   - **Fast Track DoD**: Luồng xử lý tinh gọn cho tài liệu, sửa lỗi chính tả (typo), CSS thuần không đổi layout tree, hoặc bổ sung unit test độc lập.
-- **[Phân Cấp Luồng Sống Còn](docs/business-metrics/critical-flows.md)**: Phân tầng rõ rệt từ P0 (System Survival) đến P4 (Nice to have), kích hoạt mức độ nhạy cảm tự động dựa trên bán kính tác động (Impact-based risk / Blast Radius).
-- **[Quản Lý Vòng Đời Tri Thức](docs/governance/knowledge-lifecycle.md)**: Quy định chu kỳ rà soát, dọn dẹp và lưu trữ (Retention & Archive) Task files, Incidents và ADRs sau 6–12 tháng nhằm giữ kho tài liệu luôn gọn gàng, chống quá tải token.
+- **[Phân Cấp Luồng Sống Còn](docs/operations/critical-flows.md)**: Phân tầng rõ rệt từ P0 (System Survival) đến P4 (Nice to have), kích hoạt mức độ nhạy cảm tự động dựa trên bán kính tác động (Impact-based risk / Blast Radius).
+- **[Quản Lý Vòng Đời Tri Thức](docs/governance/knowledge-lifecycle.md)**: Nguồn canonical về retention, archive và truy vết evidence cho task records, incidents và ADRs.
 
 ---
 
@@ -38,25 +39,16 @@ npm run test:fitness
     tại docs/tasks/<request>.md       Xuất task-N-fix.md (status: draft)   Sửa code phẫu thuật -> Run fitness
     Không sửa code sớm.              Dev duyệt -> status: approved        Conditional Commit trên branch riêng
   ```
-- **Fast Track**: Dành cho các thay đổi nhỏ, không thay đổi runtime behavior và không chạm vào bất kỳ Hard Stop nào (Public API, Database, Auth, Business logic, P0/P1). Quy trình: `Điều tra nhanh -> Sửa code -> Chạy test/fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit`.
+- **Fast Track**: Dành cho các thay đổi nhỏ, không thay đổi runtime behavior và không chạm vào bất kỳ Hard Stop nào (Public API, Database, Auth, Business logic, P0/P1). Quy trình: `Điều tra nhanh -> Sửa đổi -> Verify theo AGENTS §5.D -> Nghiệm thu Fast Track DoD -> Conditional Commit`.
 
 > [!NOTE]
 > Chi tiết điều kiện Fast Track và rào chắn dừng khẩn cấp (Hard Stop) được quy định tại [AGENTS.md](AGENTS.md).
 
 ### 3. Quy Chuẩn Nhánh Git & Cam Kết Có Điều Kiện
 
-- **Tuyệt đối không commit trực tiếp lên `main` / `master`**. Mọi công việc bắt buộc thực hiện trên branch riêng:
-  - `task/<ten-task>`: Yêu cầu công việc tổng hợp.
-  - `feat/<ten-feature>`: Phát triển tính năng mới.
-  - `fix/<ten-bug>`: Sửa lỗi hệ thống.
-  - `hotfix/<incident-code>`: Vá khẩn cấp cho sự cố production đã xác nhận.
-- **Cam Kết Có Điều Kiện (Conditional Commit)**: AI chỉ tạo local commit khi Developer hoặc repository policy cho phép và toàn bộ điều kiện sau được thỏa mãn:
-  1. Working tree chỉ chứa các thay đổi thuộc phạm vi task; không chứa file rác, file `.env`, credentials hoặc thay đổi ngoài scope. Nếu có baseline bẩn từ trước, phải bảo toàn baseline và không pha trộn vào commit.
-  2. Toàn bộ automated tests liên quan đều PASS (`npm test` nếu có cấu hình).
-  3. Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
-  4. Không còn giả định mở hay mâu thuẫn tài liệu chưa giải quyết.
-  5. Đang ở trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, `hotfix/*`).
-  6. Sau commit, không còn thay đổi chưa xử lý thuộc scope của task; mọi thay đổi baseline có sẵn từ trước phải được giữ nguyên và ghi nhận rõ.
+Theo [AGENTS §2.C](AGENTS.md), làm việc trên branch `task/*`, `feat/*`, `fix/*` hoặc `hotfix/*`; không commit trực tiếp `main`/`master`. Conditional commit kiểm tra **index chỉ chứa thay đổi task**, giữ nguyên baseline trong working tree, các gate bắt buộc đã PASS và không còn giả định mở. Sau commit không còn thay đổi task chưa xử lý; baseline đã ghi nhận có thể vẫn còn.
+
+Điều kiện đầy đủ thuộc AGENTS; applicability test/fitness tại [§5.D](AGENTS.md#quality-gate-applicability), test scope tại [Verification Standard](docs/standards/verification.md#risk-test-matrix). README chỉ tóm tắt, không cấp quyền Git hoặc miễn gate.
 
 ---
 
@@ -65,13 +57,13 @@ npm run test:fitness
 1. **Domain Pure**: `src/domain/` độc lập hoàn toàn, cấm import DB client, ORMs, frameworks, network clients hoặc UI. _Machine-enforced_
 2. **Client/Server Isolation**: File `'use client'` cấm import DB client, server secrets hoặc server-only modules. _Machine-enforced_
 3. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`). _Machine-enforced_
-4. **Server Trust Boundary**: Mọi truy vấn CSDL phải scope theo `userId`/`tenantId` từ session đã xác thực ở server; không tin cậy client params. _Review-enforced_
+4. **Server Trust Boundary**: User/tenant queries dùng identity/quyền được server xác thực; public/master-data/system-job có authority và scope riêng theo [Rule 4](docs/fitness-functions/architecture-rules.md#rule-server-trust-boundary). Client params không cấp quyền. _Review-enforced_
 5. **Stateless Services**: Service singletons cấm lưu trạng thái người dùng trong biến `this.*`; toàn bộ context phải truyền qua tham số hàm. _Review-enforced_
 6. **Idempotent Master Seeds**: Mọi dữ liệu hạt giống (seed) bắt buộc có canonical deterministic key và upsert lũy đẳng. _Review-enforced_
 7. **Expand-and-Contract Migrations**: Không bao giờ xóa hoặc đổi tên cột DB cùng một lần release; tuân thủ chu trình Expand -> Backfill -> Read Transition -> Contract. _Review-enforced_
 8. **Độ Nhạy Theo Tác Động (Blast Radius)**: Task có khả năng ảnh hưởng trực tiếp hoặc gián tiếp đến invariant, contract hoặc runtime path của luồng P0/P1 phải được nâng lên `risk_level: HIGH/CRITICAL` và không được dùng Fast Track. _Review-enforced_
 9. **Performance & Observability Guardrails**: List queries trên runtime path phải có giới hạn theo API contract; các flow P0/P1 phải đáp ứng yêu cầu structured logging, correlation ID và alerting tương ứng. _Review-enforced_
-10. **Architecture Fitness Gate**: Bắt buộc chạy `npm run test:fitness` khi script tồn tại và phạm vi công việc yêu cầu. Kết quả PASS xác nhận các luật Machine-enforced hiện được validator hỗ trợ. _Verification gate_
+10. **Architecture Fitness Gate**: Áp dụng [bảng gate của AGENTS](AGENTS.md#quality-gate-applicability); PASS chỉ xác nhận luật Machine-enforced mà validator hỗ trợ. Thiếu validator cho gate bắt buộc là BLOCKED. _Verification gate_
 
 ---
 
@@ -84,8 +76,9 @@ npm run test:fitness
 ├── package.json                         # Scripts kiểm tra và cấu hình dự án
 ├── docs/
 │   ├── HOW_WE_WORK.md                   # Cẩm nang toàn diện: Onboarding & Bootstrap
-│   ├── context-packages/                # First-Class Context Packages (< 15k tokens)
+│   ├── context-packages/                # Context packages; budget policy is linked from AGENTS §8
 │   ├── operations/
+│   │   ├── critical-flows.md            # Taxonomy canonical P0–P4 và blast radius
 │   │   ├── quick-checklist.md           # One-Pager: 9 ranh giới, verification gate & DoD
 │   │   └── preflight-checklist.md       # Checklist kiểm định trước release/PR
 │   ├── system-map/
@@ -93,7 +86,7 @@ npm run test:fitness
 │   │   ├── dependencies.md              # Ma trận import cho phép / bị cấm
 │   │   └── critical-paths.md            # Các luồng sống còn (Auth, Core Loop, Payment, Sync)
 │   ├── business-metrics/
-│   │   └── critical-flows.md            # Chuẩn hóa phân cấp luồng trọng yếu P0 - P4
+│   │   └── critical-flows.md            # Compatibility pointer tới operations/critical-flows.md
 │   ├── fitness-functions/
 │   │   ├── architecture-rules.md        # Ranh giới kiến trúc (Machine vs Review enforced)
 │   │   └── ci-enforcement.md            # Hướng dẫn chạy máy chấm & tích hợp CI/CD

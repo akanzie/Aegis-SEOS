@@ -42,32 +42,9 @@ Khi nhận yêu cầu review hoặc merge PR/MR, phải trả lời đủ 10 câ
 - Khi gặp escalation trigger trong `AGENTS.md`, dừng và báo Developer. Findings phải ghi mức độ, vị trí, tác động và hướng xử lý; không tự ý sửa nghiệp vụ để làm review pass.
 - Kết luận chỉ có hiệu lực cho cặp source/target SHA đã review. Nếu một trong hai thay đổi, cập nhật diff, kiểm tra lại phần bị ảnh hưởng và bằng chứng liên quan trước khi merge. Review đạt không thay thế yêu cầu rõ ràng của Developer cho thao tác merge hoặc push.
 
-### Mẫu Báo Cáo Review
+### Báo Cáo Review
 
-```markdown
-PR/MR hoặc source branch: ...
-Target branch: ...
-Source SHA / target SHA / merge-base: ...
-Ticket / approved task / spec / AC: ...
-Scope, baseline và risk level: ...
-
-| # | Trạng thái | Trả lời và bằng chứng | Vấn đề / bước tiếp theo |
-| :--- | :--- | :--- | :--- |
-| 1 | ... | ... | ... |
-| 2 | ... | ... | ... |
-| 3 | ... | ... | ... |
-| 4 | ... | ... | ... |
-| 5 | ... | ... | ... |
-| 6 | ... | ... | ... |
-| 7 | ... | ... | ... |
-| 8 | ... | ... | ... |
-| 9 | ... | ... | ... |
-| 10 | ... | ... | ... |
-
-Verification: lệnh, exit code, local/CI, commit, manual smoke test hoặc N/A có lý do.
-Findings/blockers: mức độ, vị trí, tác động và hướng xử lý.
-Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
-```
+Dùng [Review template](../templates/review.md), là mẫu đầy đủ duy nhất. Báo cáo cần ghi source/target SHA, merge-base, nguồn nghiệm thu, scope/risk, kết quả và evidence cho đủ 10 câu, verification, findings/blockers và kết luận merge eligibility. Checklist này quy định gate; template giữ cấu trúc artifact.
 
 ---
 
@@ -79,7 +56,7 @@ Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
 - [ ] Không có mâu thuẫn (conflict) chưa được giải quyết giữa code và tài liệu.
 
 ## 2. Kiểm Tra Ranh Giới Kiến Trúc & An Toàn
-- [ ] Lệnh `npm run test:fitness` chạy thành công với Exit code 0 (Machine-Enforced).
+- [ ] Fitness PASS Exit code 0 khi [AGENTS §5.D](../../AGENTS.md#quality-gate-applicability) yêu cầu; N/A chỉ khi bảng cho phép, ghi lý do. Thiếu validator bắt buộc là BLOCKED.
 - [ ] Tầng Domain thuần khiết, không bị xâm lấn bởi DB, ORM, framework hay UI.
 - [ ] Tầng Client không leak Server Secrets hoặc trực tiếp gọi Database.
 - [ ] Không có truy cập `process.env.*` trực tiếp ngoài module cấu hình tập trung.
@@ -87,12 +64,12 @@ Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
 
 ## 3. Kiểm Tra Cơ Sở Dữ Liệu & Migrations
 - [ ] Tuân thủ nguyên tắc **Expand-and-Contract** (không xóa hoặc đổi tên cột tức thì).
-- [ ] Các câu lệnh query đều được scope theo `userId`/`tenantId` hợp lệ từ server session.
+- [ ] User/tenant queries dùng identity/quyền server xác thực; public/master-data/system-job có authority và scope riêng theo [Rule 4](../fitness-functions/architecture-rules.md#rule-server-trust-boundary); client params không cấp quyền.
 - [ ] Dữ liệu Seed/Master Data đảm bảo tính lũy đẳng (Idempotent upsert, không sinh duplicate).
 - [ ] Các trường tìm kiếm thường xuyên đã có index phù hợp, đánh giá cân đối write overhead.
 
 ## 4. Kiểm Thử Tự Động (Testing)
-- [ ] Toàn bộ Unit Tests và Integration Tests liên quan đều PASS.
+- [ ] Các tests/checks bắt buộc theo [ma trận risk](../standards/verification.md#risk-test-matrix) và gate applicability đã PASS; N/A ghi lý do, skipped/not run không phải PASS.
 - [ ] Đã bổ sung test case cho invariants và edge-case classes (boundary values, invalid input, null/empty, concurrency/idempotency).
 
 ## 5. Quy Chuẩn Git & Release

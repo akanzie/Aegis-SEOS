@@ -4,6 +4,8 @@
 
 Đọc manifest, cấu hình test, CI và standards của dự án trước khi chọn lệnh. `npm test` và `npm run test:fitness` là lệnh tham chiếu của SEOS Node.js; stack khác phải khai báo lệnh tương đương trong project profile, không bịa script hoặc bỏ gate âm thầm.
 
+Quyền và applicability của gates được định nghĩa duy nhất tại [AGENTS §5.D](../../AGENTS.md#quality-gate-applicability). Bảng dưới đây chọn checks theo diff; áp dụng thêm ma trận risk ở §1.A, không dùng bảng này để miễn gate Standard.
+
 | Thay đổi | Kiểm tra cần xem xét |
 | :--- | :--- |
 | Docs/format | Diff, link/format và tính nhất quán |
@@ -11,9 +13,26 @@
 | Types/build/config/dependencies | Typecheck/lint tương ứng, build nếu có ảnh hưởng compilation, packaging hoặc startup |
 | Public contracts/schema | Compatibility, integration và migration/rollback theo scope |
 | UI/interaction/media | Kiểm tra hành vi; visual, accessibility hoặc thiết bị thật khi cần |
-| P0/P1 | Full regression hoặc integration bắt buộc theo AGENTS.md; không hạ gate vì môi trường thiếu |
+| P0/P1 | Áp dụng ma trận risk ở §1.A; không hạ gate vì môi trường thiếu |
 
 Architecture fitness là gate bắt buộc khi áp dụng; nếu không có validator phù hợp phải báo thiếu gate và cấu hình trước khi tuyên bố đạt DoD yêu cầu gate đó. Không coi validator import là bằng chứng cho mọi invariant bảo mật.
+
+<a id="risk-test-matrix"></a>
+### 1.A. Ma Trận Kiểm Thử Theo Risk (Canonical)
+
+Phân loại theo [Critical Flows](../operations/critical-flows.md). Các hàng dưới đây quy định kiểm thử hành vi runtime trong blast radius, cộng với checks theo loại diff và gate applicability của AGENTS.
+
+| Flow / risk | Kiểm thử bắt buộc trong phạm vi ảnh hưởng |
+| :--- | :--- |
+| P0 / CRITICAL | Unit cho logic/invariants liên quan, integration regression và full flow regression; tất cả automated/integration/manual checks của impacted critical flow và invariants của nó |
+| P1 / HIGH | Unit cho logic/invariants liên quan và integration regression; bao phủ các invariant/edge-case classes bị ảnh hưởng, concurrency/idempotency khi liên quan; manual checks khi scope yêu cầu |
+| P2 / MEDIUM | Unit + integration cho core business flow bị ảnh hưởng; manual checks khi scope yêu cầu |
+| P3 / LOW | Unit cho hành vi bị ảnh hưởng; bổ sung integration/manual checks khi diff/contract cần |
+| P4 / TRIVIAL | Format/diff, docs links hoặc visual/manual checks phù hợp; automated tests khi hành vi/source bị ảnh hưởng |
+
+**Full flow regression** là toàn bộ checks đã xác định cho critical flow bị ảnh hưởng và các invariants/dependencies của nó; không có nghĩa chạy mọi suite không liên quan trong repository. Shared contracts mở rộng blast radius thì phải mở rộng regression tương ứng. Full flow regression đã bao gồm integration, không thay thế nó. Verification plan phải liệt kê checks cụ thể và lý do coverage trước execution.
+
+Với policy docs P0/P1 không sửa runtime: phải review toàn bộ owner/direct summaries liên quan, links/anchors, authority và các tình huống áp dụng gate/trust boundary. Runtime integration/manual flow checks có thể N/A nếu diff/profile chứng minh không có runtime tác động hoặc ứng dụng nghiệp vụ; vẫn chạy các automated suites liên quan đang có và fitness bắt buộc của Standard. Thiếu môi trường cho một flow runtime có thật là BLOCKED. Project profile ghi capability thực tế, không tự miễn gate.
 
 ## 2. Test bảo vệ ý định
 

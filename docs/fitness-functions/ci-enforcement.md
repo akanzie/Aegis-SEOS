@@ -6,14 +6,16 @@ Tài liệu này hướng dẫn cách tích hợp và kích hoạt máy chấm t
 
 ## 1. Chạy Cục Bộ (Local Verification)
 
-Bất kỳ lúc nào trước khi commit hoặc hoàn tất task, Developer và AI Agent chạy:
+Chọn gate theo [AGENTS §5.D](../../AGENTS.md#quality-gate-applicability), test scope theo [Verification Standard](../standards/verification.md#risk-test-matrix), commands theo project profile. Khi fitness bắt buộc, chạy:
+
+Tests dùng chung fixtures/config phải hoàn tất trước fitness (xem [known pitfalls §4](../project-memory/known-pitfalls.md)). Với profile hiện tại: `npm test` rồi `npm run test:fitness`; PowerShell có thể dùng `npm.cmd`. Docs-only Fast Track có thể N/A theo bảng; thiếu validator cho gate bắt buộc là BLOCKED.
 
 ```bash
 npm run test:fitness
 ```
 
 ### Kết Quả Mong Đợi
-- Nếu code tuân thủ đầy đủ ranh giới:
+- Nếu không có vi phạm các luật machine-enforced mà validator hiện hỗ trợ (không chứng minh mọi invariant bảo mật):
   ```text
   [FITNESS] Checking Architecture Rules...
   [PASS] Domain layer is pure (0 violations)
@@ -35,7 +37,7 @@ npm run test:fitness
 
 ## 2. Cấu Hình Tích Hợp Continuous Integration (CI Pipeline)
 
-Ví dụ cấu hình trong GitHub Actions (`.github/workflows/ci.yml`):
+Ví dụ cấu hình trong GitHub Actions (`.github/workflows/ci.yml`), không phải CI đang tồn tại hay bằng chứng branch protection. Pipeline có thể luôn chạy cả tests và fitness; applicability tối thiểu vẫn thuộc AGENTS. Xác minh required checks thực tế trên đúng commit khi bàn giao:
 
 ```yaml
 name: CI Pipeline
@@ -56,8 +58,8 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - name: Architecture Fitness Check
-        run: npm run test:fitness
       - name: Run Tests
         run: npm test
+      - name: Architecture Fitness Check
+        run: npm run test:fitness
 ```

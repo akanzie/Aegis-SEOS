@@ -14,6 +14,8 @@ Khi xảy ra sự cố trên môi trường Production, bảo toàn dữ liệu 
 
 ## Quy Trình 4 Bước Ứng Phó Khẩn Cấp
 
+Incident severity và approval mitigation không cấp quyền sửa code, tạo task approved, commit hoặc deploy. Hotfix execution phải theo Standard task đã được duyệt; mọi exception cần explicit, scoped Developer override theo [AGENTS §0](../../AGENTS.md) và vẫn cần quyền deploy riêng theo project/operations. Không tồn tại severity-based bypass.
+
 ### 1. Cách Ly & Giảm Thiểu (Triage & Mitigate)
 - **Đánh giá phương án phục hồi có phê duyệt**:
   - Nếu sự cố có tương quan rõ rệt với bản release mới: Ưu tiên lựa chọn phương án phục hồi phù hợp nhất đã được phê duyệt:
@@ -28,12 +30,12 @@ Khi xảy ra sự cố trên môi trường Production, bảo toàn dữ liệu 
 - Tái hiện lỗi trên môi trường Staging/Local bằng dữ liệu mô phỏng.
 - Thực hiện Session Điều Tra theo chuẩn `docs/playbooks/bug-investigation.md`.
 
-### 3. Phát Hành Bản Vá (Hotfix Deployment)
-- Tạo branch: `hotfix/<incident-code>`.
-- Sửa lỗi phẫu thuật tối thiểu (surgical fix), tránh đính kèm refactoring lan man.
-- Chạy toàn bộ test suites và kiểm tra máy chấm `npm run test:fitness`.
-- Thực hiện Conditional Commit trên branch `hotfix/*`.
-- Deploy bản vá lên Staging kiểm tra trước khi đưa lên Production.
+### 3. Thực Thi Hotfix Và Phát Hành
+- Tạo Standard task cho hotfix theo [Agent Workflow](../operations/agent-workflow.md) và [Task Authoring](../task-authoring/README.md); chờ approval bao phủ đúng revision, scope, AC và risk trước khi sửa.
+- Dùng branch `hotfix/<incident-code>` theo [AGENTS §2.C](../../AGENTS.md). Severity hoặc incident role không thay approval hay quyền Git.
+- Sửa tối thiểu trong approved scope; chạy required tests/checks và fitness theo [gate applicability](../../AGENTS.md#quality-gate-applicability) và project profile; conditional commit chỉ sau khi gates đạt.
+- Deploy lên staging rồi production chỉ bởi người có deployment authority theo project operations. Approval task, mitigation hoặc Developer override không tự cấp quyền deploy.
+- Nếu có explicit Developer override theo AGENTS §0, ghi issuer, timestamp, incident ID, action/file scope, expiry/recovery và evidence; override chỉ áp dụng cho scope nêu rõ và không tạo deployment authority.
 
 ### 4. Đúc Kết & Post-Mortem (Learning & Prevention)
 - Tạo file ghi nhận sự cố theo mẫu: `docs/engineering-incidents/YYYY-MM-DD-<incident-title>.md`.
