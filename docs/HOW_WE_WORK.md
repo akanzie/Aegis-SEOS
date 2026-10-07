@@ -57,14 +57,10 @@ Khi có một tính năng mới hoặc một danh sách lỗi cần sửa, bạn
 - Chỉnh sửa CSS thuần túy không đổi cấu trúc layout/DOM.
 - Viết bổ sung Unit test thuần túy không sửa logic runtime.
 - Task read-only: Giải thích kiến trúc, trace code, review logic.
-- **Quy trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi mã nguồn/tài liệu)`.
+- **Quy trình Fast Track**: `Điều tra nhanh -> Sửa đổi -> Verify theo AGENTS §5.D -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi cần lưu trữ)`.
 
 #### B. Quy Tắc Vàng Về Git & Cam Kết Có Điều Kiện:
-- **Tuyệt đối KHÔNG commit trực tiếp lên `main` / `master`**.
-- Luôn làm việc trên branch riêng theo task: `task/<ten-task>`, `feat/<ten-feature>`, `fix/<ten-bug>`, hoặc `hotfix/<incident-code>`.
-- **Bảo toàn Baseline**: Không tự ý sửa, stash, reset hoặc commit các thay đổi có sẵn từ trước trong working tree.
-- AI chỉ commit khi index chỉ chứa thay đổi thuộc task, baseline giữ nguyên, các kiểm tra bắt buộc và fitness functions đều PASS. Sau commit không còn thay đổi task chưa xử lý.
-- Task read-only và investigation thuần túy không bắt buộc tạo commit.
+Theo [AGENTS §2.C](../AGENTS.md), dùng branch task hợp lệ và giữ nguyên baseline. Index chỉ chứa thay đổi task, các gate bắt buộc theo [§5.D](../AGENTS.md#quality-gate-applicability) đã PASS, không còn giả định mở; sau commit không còn thay đổi task chưa xử lý. Baseline được ghi nhận có thể vẫn còn trong working tree. Điều kiện đầy đủ và quyền Git thuộc AGENTS; tài liệu này chỉ hướng dẫn. Task read-only/investigation thuần túy không commit code.
 
 ---
 
@@ -111,6 +107,7 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 │   ├── templates/                       # Prompt, task, profile, review/rework, handoff, ADR, spec
 │   ├── context-packages/                # First-Class Context Packages (Load/Do Not Load/Token Budget)
 │   ├── operations/
+│   │   ├── critical-flows.md            # Taxonomy canonical P0–P4 và blast radius
 │   │   ├── quick-checklist.md           # 1 trang One-Pager: 10 điều bất biến
 │   │   ├── preflight-checklist.md       # Checklist chi tiết trước release
 │   │   ├── agent-workflow.md            # Mode, approval, review/rework
@@ -136,7 +133,7 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 │   │   ├── rejected-solutions.md        # Phương án đã loại bỏ & lý do
 │   │   └── technical-lessons.md         # Bài học đúc kết
 │   ├── business-metrics/
-│   │   └── critical-flows.md            # Phân cấp User flows trọng yếu (P0-P4)
+│   │   └── critical-flows.md            # Compatibility pointer tới operations/critical-flows.md
 │   ├── engineering-incidents/
 │   │   └── incident-template.md         # Mẫu ghi nhận sự cố post-mortem
 │   ├── main_docs/
@@ -160,24 +157,15 @@ Khởi tạo hoặc tiếp nhận dự án theo [Project Adoption](operations/pr
 Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩn mực:
 
 #### A. `AGENTS.md` (Root Contract)
-- Định nghĩa rõ thứ tự ưu tiên giải quyết mâu thuẫn: `An Toàn > Dev Override > Approved Task > Functional Specs > Architecture > Code Style`.
+- Dẫn [hierarchy canonical tại AGENTS §0](../AGENTS.md): Approved task quyết định scope/AC, Accepted ADR quyết định Technical HOW còn hiệu lực; system map/technical architecture là tài liệu dẫn xuất, profile chỉ ánh xạ capability. Không tạo hierarchy rút gọn có authority riêng.
 - Khai báo quy chuẩn Git an toàn: Cấm commit lên `main`, tự tạo branch theo task (`task/*`, `feat/*`, `fix/*`, `hotfix/*`), bảo toàn baseline, cấm tự ý `push`/`reset --hard`.
 - Khai báo Token Budget: Low (<= 10k), Medium (<= 30k), High (<= 60k), Critical (Cần duyệt).
 - Khai báo 2 luồng: Fast Track (Fast Track DoD) và Standard 3-Step Path (Standard DoD).
 
 #### B. `docs/operations/quick-checklist.md` (10 Điều Bất Biến & Split DoD)
-- **Machine-Enforced (npm run test:fitness)**:
-  1. **Domain Pure**: Tầng domain cấm import DB, framework, network, UI.
-  2. **Client/Server Isolation**: Client components cấm import server-only modules hoặc DB client.
-  3. **No Raw Env**: Cấm đọc `process.env` rải rác ngoài module schema validate tập trung (`src/lib/env.ts`).
-- **Review-Enforced (Investigation & Preflight)**:
-  4. **Server Trust Boundary**: Mọi query DB phải lọc theo `userId` từ session đã xác thực.
-  5. **Stateless Services**: Service singleton cấm lưu state người dùng trong biến `this`.
-  6. **Master Data Identity**: Mọi dữ liệu hạt giống (seed) phải có canonical identity key và upsert lũy đẳng.
-  7. **Expand-and-Contract**: Không bao giờ đổi tên hoặc xóa cột DB trong cùng 1 lần release.
-  8. **Critical Flows Sensitivity**: Thay đổi có blast radius chạm vào flow P0/P1 tự động nâng Risk >= HIGH.
-  9. **Performance & Observability Guardrails**: Cấm unbounded list query, phòng chống N+1, correlation ID và structured logs.
-  10. **Machine-Verified Fitness Pass**: Bắt buộc chạy `npm run test:fitness` pass với Exit code 0 trước khi commit.
+Checklist chỉ tóm tắt/link tới [architecture rules](fitness-functions/architecture-rules.md), [risk taxonomy](operations/critical-flows.md), [test matrix](standards/verification.md#risk-test-matrix) và [DoD/gate applicability của AGENTS](../AGENTS.md#quality-gate-applicability). Không sao chép bộ policy độc lập khi bootstrap.
+
+User/tenant queries phải dùng identity/quyền server xác thực; public/master-data/system-job có authority và scope riêng theo Rule 4. Fitness bắt buộc hay N/A được xác định theo bảng gate, không theo câu “mọi task đều chạy”.
 
 #### C. `scripts/validators/architecture-fitness.mjs` (Máy Chấm Ranh Giới)
 - Viết 1 script Node.js quét AST hoặc regex import:
@@ -209,13 +197,9 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
   - **ADRs (`docs/decisions/**`)**: Khi bị thay thế bởi quyết định mới -> đổi trạng thái sang `Superseded` và liên kết sang ADR mới.
 
 #### G. Chuẩn Hóa Phân Cấp Luồng Trọng Yếu (Critical Flows P0 - P4)
-- **P0 - System Survival**: Luồng sống còn (Auth, Session, Core Loop, Payment availability & security boundary). Lỗi = Blocker.
-- **P1 - Revenue & Integrity**: Toàn vẹn giao dịch thanh toán (charging, renewal, refund, ledger), đồng bộ CSDL, master data seeding.
-- **P2 - Core Business**: Các use case nghiệp vụ chính của người dùng.
-- **P3 - Convenience**: Các tính năng hỗ trợ, tiện ích bổ sung.
-- **P4 - Nice to Have**: Chỉnh chu UI/UX, micro-interactions, copy text.
-- *Nguyên tắc ưu tiên rủi ro cao nhất*: Luồng chạm nhiều cấp độ thì áp dụng cấp cao nhất (P0 > P1 > P2 > P3 > P4).
-- *Quy tắc độ nhạy theo tác động (Blast Radius)*: Bất kỳ task nào có khả năng ảnh hưởng trực tiếp/gián tiếp đến invariant/contract của luồng **P0 / P1** tự động nâng mức rủi ro lên `>= HIGH` và bắt buộc chạy full regression test.
+Nguồn canonical là [operations/critical-flows.md](operations/critical-flows.md); đường dẫn business-metrics cũ giữ compatibility pointer. Core execution loop của hệ thống thuộc P0, học/luyện tập thông thường thuộc P2; system map ánh xạ theo blast radius và mức cao nhất.
+
+Yêu cầu unit/integration/full flow regression được định nghĩa một lần tại [Verification Standard](standards/verification.md#risk-test-matrix). P0/P1 cấm Fast Track; docs ảnh hưởng policy bảo vệ các flow này vẫn dùng Standard và fitness bắt buộc. Không tự miễn gate qua project profile.
 
 ---
 
@@ -226,7 +210,7 @@ Khi tạo mới các file trên, AI phải điền sẵn nội dung khung chuẩ
 | *"Khởi tạo hệ thống theo HOW_WE_WORK.md"* | Dựng toàn bộ bộ khung thư mục + context-packages + governance + các file mẫu + script fitness function. Chủ động surface ambiguity. |
 | *"Soạn batch prompt cho yêu cầu X"* | Phân tích yêu cầu -> Chia task độc lập -> Xuất vào `docs/tasks/X.md`. Không sửa code. |
 | *"Chạy điều tra Task N"* | Đọc đúng Context Package tương ứng -> Trace code -> Phân tích Spec Impact -> Xuất `task-N-fix.md` (draft). |
-| *"Thực thi Task N"* | Kiểm tra file fix đã approved -> Cập nhật Spec -> Sửa Code -> Chạy test/fitness -> Auto commit trên branch riêng. |
+| *"Thực thi Task N"* | Kiểm tra file fix đã approved -> Cập nhật Spec -> Sửa Code -> Verify theo AGENTS §5.D -> Conditional commit trên branch riêng. |
 | *"Review / merge request vào main"* | Xác định source/target commit -> Đối chiếu ticket/spec gốc -> Trả lời đủ 10 câu trong Merge Review Gate kèm bằng chứng -> Kết luận đủ/chưa đủ điều kiện; chỉ merge khi được yêu cầu rõ ràng và gate đạt. |
-| *"Sửa nhanh lỗi chính tả / format này"* | Áp dụng Fast Track -> Sửa trực tiếp -> Chạy test -> Commit ngay. |
+| *"Sửa nhanh lỗi chính tả / format này"* | Áp dụng Fast Track hợp lệ -> Sửa -> Verify/DoD theo AGENTS -> Conditional commit. |
 

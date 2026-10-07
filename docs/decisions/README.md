@@ -4,6 +4,12 @@ File mẫu riêng để copy: [ADR template](../templates/adr.md). Giữ `status
 
 Thư mục này ghi nhận các quyết định kiến trúc quan trọng có tầm ảnh hưởng lâu dài.
 
+## Authority Trong Technical HOW
+
+Theo [AGENTS §0](../../AGENTS.md), Accepted ADR còn hiệu lực là nguồn quyết định kiến trúc trong Technical HOW. Approved task quyết định scope/AC của công việc hiện hành, không tự supersede ADR; thay đổi quyết định kiến trúc cần ADR mới được owner chấp thuận và trỏ supersedes/superseded_by rõ ràng. Proposed/Superseded/Deprecated ADR không là quyết định hiện hành.
+
+Khi ADR được accepted, đồng bộ invariants/standards, system map, technical architecture và profile/validator mapping bị ảnh hưởng trước triển khai. Nếu tài liệu dẫn xuất lệch ADR, phải nêu conflict và đồng bộ, không tự pha trộn. ADR không làm yếu safety/security hoặc tự đổi functional spec. Profile chỉ ghi công cụ/capability, không cấp quyền hoặc miễn gate.
+
 ---
 
 ## 1. Điều Kiện Bắt Buộc Tạo ADR (ADR Mandatory Triggers)

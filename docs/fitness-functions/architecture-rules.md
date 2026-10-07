@@ -46,8 +46,17 @@ Các quy tắc dưới đây bắt buộc được rà soát trong Investigation
 <a id="rule-server-trust-boundary"></a>
 ### Luật 4: Server Trust Boundary & User Scoping (Ranh Giới Phía Máy Chủ)
 - **Cơ chế kiểm tra**: Review-enforced / Preflight Checklist.
-- **Nội dung ràng buộc**: Mọi database query tương tác dữ liệu người dùng phải chứa mệnh đề ràng buộc định danh tài khoản (`userId` / `tenantId`) được lấy từ Server Session đã xác thực. Tuyệt đối không tin cậy `userId` truyền từ client parameters/body.
-- **Mục đích**: Ngăn chặn hoàn toàn lỗ hổng Insecure Direct Object Reference (IDOR).
+- **Nội dung ràng buộc**: Mọi query phải có authority và phạm vi truy cập được server xác minh theo loại dữ liệu; client params/body chỉ là input, không là căn cứ cấp quyền.
+
+| Loại query | Authority tin cậy | Scope bắt buộc |
+| :--- | :--- | :--- |
+| User/tenant-owned (đọc hoặc ghi) | Identity từ Server Session đã xác thực; tenant membership/quyền do server kiểm tra | Predicate `userId`/`tenantId` và ownership/permission của tài nguyên tương ứng; kiểm tra quyền trước mutation. Tenant do client chọn phải được xác minh membership |
+| Public data | Public access contract đã xác nhận ở server/spec | Chỉ records/fields được công khai theo contract; không dùng nhãn public để đọc dữ liệu private |
+| Shared master data / seed | Read contract của dữ liệu dùng chung; write/seed qua principal hoặc tiến trình quản trị được cấp quyền ở server | Dataset và canonical identity key tương ứng; upsert lũy đẳng. Master data riêng tenant vẫn phải tenant-scoped |
+| System job / webhook không có user session | Service principal hoặc trigger được server xác thực (ví dụ chữ ký webhook) và quyền đã được cấp | Job scope/dataset/tenant allowlist được xác minh; thao tác user/tenant data vẫn scope đúng chủ sở hữu. Cấm truy cập toàn bộ DB chỉ vì là job |
+
+- Với mọi loại query: scope được thực thi tại server/repository, không giả lập user session cho dữ liệu system/public và không bỏ kiểm tra quyền. Áp dụng thêm [performance guardrails](../standards/performance.md).
+- **Mục đích**: Ngăn IDOR và truy cập chéo user/tenant; các trường hợp không có session vẫn có authority và scope tường minh.
 
 <a id="rule-stateless-services"></a>
 ### Luật 5: Stateless Services & Repositories (Dịch Vụ Phi Trạng Thái)

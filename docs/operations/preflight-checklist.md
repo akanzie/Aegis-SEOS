@@ -79,7 +79,7 @@ Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
 - [ ] Không có mâu thuẫn (conflict) chưa được giải quyết giữa code và tài liệu.
 
 ## 2. Kiểm Tra Ranh Giới Kiến Trúc & An Toàn
-- [ ] Lệnh `npm run test:fitness` chạy thành công với Exit code 0 (Machine-Enforced).
+- [ ] Fitness PASS Exit code 0 khi [AGENTS §5.D](../../AGENTS.md#quality-gate-applicability) yêu cầu; N/A chỉ khi bảng cho phép, ghi lý do. Thiếu validator bắt buộc là BLOCKED.
 - [ ] Tầng Domain thuần khiết, không bị xâm lấn bởi DB, ORM, framework hay UI.
 - [ ] Tầng Client không leak Server Secrets hoặc trực tiếp gọi Database.
 - [ ] Không có truy cập `process.env.*` trực tiếp ngoài module cấu hình tập trung.
@@ -87,12 +87,12 @@ Kết luận: ĐỦ ĐIỀU KIỆN MERGE / CHƯA ĐỦ ĐIỀU KIỆN MERGE.
 
 ## 3. Kiểm Tra Cơ Sở Dữ Liệu & Migrations
 - [ ] Tuân thủ nguyên tắc **Expand-and-Contract** (không xóa hoặc đổi tên cột tức thì).
-- [ ] Các câu lệnh query đều được scope theo `userId`/`tenantId` hợp lệ từ server session.
+- [ ] User/tenant queries dùng identity/quyền server xác thực; public/master-data/system-job có authority và scope riêng theo [Rule 4](../fitness-functions/architecture-rules.md#rule-server-trust-boundary); client params không cấp quyền.
 - [ ] Dữ liệu Seed/Master Data đảm bảo tính lũy đẳng (Idempotent upsert, không sinh duplicate).
 - [ ] Các trường tìm kiếm thường xuyên đã có index phù hợp, đánh giá cân đối write overhead.
 
 ## 4. Kiểm Thử Tự Động (Testing)
-- [ ] Toàn bộ Unit Tests và Integration Tests liên quan đều PASS.
+- [ ] Các tests/checks bắt buộc theo [ma trận risk](../standards/verification.md#risk-test-matrix) và gate applicability đã PASS; N/A ghi lý do, skipped/not run không phải PASS.
 - [ ] Đã bổ sung test case cho invariants và edge-case classes (boundary values, invalid input, null/empty, concurrency/idempotency).
 
 ## 5. Quy Chuẩn Git & Release

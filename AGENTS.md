@@ -21,7 +21,7 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
    - `known-pitfalls.md`: Các bẫy kỹ thuật đã được cảnh báo.
    - `technical-lessons.md`: Các bài học xương máu đã đúc kết.
 6. **Acceptance Criteria (AC)**: Tiêu chí nghiệm thu được xác lập trong task active.
-7. **Architecture & Standards (`docs/system-map/`, `docs/fitness-functions/`, `docs/standards/`)**: Ranh giới kiến trúc và chuẩn mực kỹ thuật (Technical "HOW").
+7. **Architecture & Standards (Technical "HOW")**: Trong phạm vi kỹ thuật, ưu tiên Accepted ADR còn hiệu lực (`docs/decisions/`) -> invariants/standards (`docs/fitness-functions/`, `docs/standards/`) -> system map (`docs/system-map/`) -> thiết kế triển khai (`docs/architecture/`). Approved task quyết định scope/AC hiện hành, không tự thay thế Accepted ADR; nếu cần đổi kiến trúc, phải có ADR mới được chấp thuận và đồng bộ các tài liệu dẫn xuất trước triển khai. Project profile chỉ ánh xạ stack, commands và khả năng kiểm tra thực tế, không cấp quyền hoặc miễn gate. Không nguồn Technical HOW nào được làm yếu safety/security hay sửa Business WHAT ngầm.
 8. **Existing Code Conventions**: Phong cách trình bày của module đang can thiệp.
 
 *Nguyên tắc xử lý lệch pha:* Khi phát hiện code hoặc yêu cầu mâu thuẫn với `fn` specs, AI bắt buộc chỉ rõ điểm khác biệt và đề xuất cập nhật spec song song/trước khi sửa code. Tuyệt đối không âm thầm pha trộn hai nguồn mâu thuẫn.
@@ -66,8 +66,8 @@ Khi phát hiện mâu thuẫn hoặc xung đột thông tin, AI Agent bắt bu�
 - **Bảo toàn Baseline Repository**: Nếu working tree đã có các thay đổi từ trước khi bắt đầu task, AI không được tự ý sửa, stash, reset hoặc commit các thay đổi đó. Phải ghi nhận baseline và bảo đảm không pha trộn chúng vào commit của task.
 - **Cam Kết Có Điều Kiện (Conditional Commit)**: AI **chỉ được phép commit** khi thỏa mãn **TOÀN BỘ** các điều kiện sau:
   1. **Staged Scope**: Index chỉ chứa thay đổi thuộc task; không chứa file rác, secrets hoặc thay đổi baseline. Working tree có thể còn baseline đã ghi nhận. Kiểm tra staged diff trước commit; nếu không tách được thay đổi an toàn, dùng worktree riêng hoặc báo Developer.
-  2. **Automated tests pass**: Toàn bộ automated tests liên quan đều PASS (`npm test` nếu có test runner).
-  3. **Architecture fitness pass**: Máy chấm kiến trúc PASS với Exit code 0 (`npm run test:fitness`).
+  2. **Automated tests pass**: Các automated tests bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) đều PASS; mục N/A có lý do được ghi trong evidence.
+  3. **Architecture fitness pass**: Gate fitness theo [bảng áp dụng](#quality-gate-applicability) PASS với Exit code 0 khi bắt buộc; N/A chỉ trong trường hợp bảng cho phép, không dùng thiếu validator để miễn gate.
   4. **No open assumptions**: Không còn giả định mở (open assumptions) hay xung đột chưa giải quyết.
   5. **Valid task branch**: Đang ở trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), tuyệt đối không phải `main`/`master`.
   6. **Post-commit clean tree**: Sau khi commit, `git status --short` phải không còn thay đổi chưa được xử lý thuộc phạm vi task.
@@ -103,7 +103,7 @@ Soạn yêu cầu và chia task theo [Task Authoring](docs/task-authoring/README
   - Chỉnh sửa CSS thuần túy không thay đổi cấu trúc DOM / layout tree.
   - Viết bổ sung Unit test thuần túy không sửa logic runtime.
   - Task read-only: Giải thích kiến trúc, trace code, review logic.
-- **Chu trình Fast Track**: `Điều tra nhanh -> Sửa code -> Chạy test & npm run test:fitness -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi mã nguồn)`.
+- **Chu trình Fast Track**: `Điều tra nhanh -> Sửa đổi -> Verify theo bảng áp dụng gate -> Nghiệm thu Fast Track DoD -> Conditional Commit (nếu có thay đổi cần lưu trữ)`.
 - **RÀO CHẮN DỪNG KHẨN CẤP (FAST TRACK HARD STOP)**:
   > [!CAUTION]
   > Fast Track **lập tức vô hiệu lực** nếu phát sinh bất kỳ yếu tố nào sau đây (bắt buộc quay lại Quy trình Chuẩn 3 bước):
@@ -145,8 +145,8 @@ Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp �
 ### A. Standard DoD (Áp dụng cho Standard 3-Step Path)
 1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) đã được Developer duyệt (`status: approved`).
 2. **Spec Synchronized**: Đặc tả nghiệp vụ (`docs/main_docs/<ACTIVE_VERSION>/fn/`) đã được cập nhật đồng bộ nếu có thay đổi hành vi (`Spec Impact: CHANGE/CLARIFICATION`).
-3. **Automated Tests Pass**: Mọi test suites liên quan đều PASS (nếu dự án có cấu hình test runner).
-4. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` thực thi thành công với Exit code 0.
+3. **Automated Tests Pass**: Các checks bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) và [ma trận kiểm thử](docs/standards/verification.md#risk-test-matrix) đã PASS; N/A có lý do được ghi rõ.
+4. **Architecture Fitness Pass**: Gate Standard theo [bảng áp dụng](#quality-gate-applicability) thực thi thành công với Exit code 0.
 5. **No Open Assumptions**: Toàn bộ giả định mở hoặc xung đột kiến trúc/nghiệp vụ đã được giải quyết triệt để.
 6. **Documentation & Memory Updated**: Đã cập nhật ADR (nếu chạm trigger), pitfalls/lessons (nếu phát hiện bẫy mới).
 7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), không sót file nhạy cảm hay file rác.
@@ -156,8 +156,8 @@ Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp �
 1. **Scope Validity**: Phạm vi thay đổi vẫn nằm trọn vẹn trong các trường hợp cho phép của Fast Track.
 2. **No Hard Stop**: Không phát sinh bất kỳ điều kiện nào thuộc Fast Track Hard Stop.
 3. **Minimal Surgical Diff**: Diff chỉ chứa thay đổi tối thiểu cần thiết cho task.
-4. **Verification Pass**: Các kiểm tra phù hợp với loại thay đổi đã PASS (format, lint, unit tests liên quan).
-5. **Architecture Fitness Pass**: Máy chấm `npm run test:fitness` PASS với Exit code 0 nếu script tồn tại và thay đổi có khả năng chạm vào source code hoặc ranh giới kiến trúc.
+4. **Verification Pass**: Các checks bắt buộc theo [bảng áp dụng gate](#quality-gate-applicability) đã PASS, có evidence tương xứng với thay đổi.
+5. **Architecture Fitness Pass**: Fitness PASS với Exit code 0 khi [bảng áp dụng](#quality-gate-applicability) yêu cầu; N/A được ghi rõ lý do khi bảng cho phép.
 6. **No Open Assumptions**: Không còn giả định mở hoặc xung đột chưa được giải quyết.
 7. **Conditional Commit**: Commit cục bộ trên task branch hợp lệ nếu task tạo ra thay đổi cần lưu trữ vào kho mã nguồn.
 8. **Evidence & Handoff**: Báo cáo kiểm tra và bằng chứng tương xứng phạm vi; không bỏ qua kiểm tra thủ công cần thiết chỉ vì dùng Fast Track.
@@ -166,6 +166,22 @@ Một task chỉ được coi là hoàn tất (`status: completed`) khi đáp �
 - **Investigation Session**: Hoàn tất khi tài liệu phân tích `task-N-fix.md` hoặc `task-N-feat.md` được tạo với `status: draft`. Không yêu cầu commit code.
 - **Execution Task**: Hoàn tất khi đáp ứng Standard DoD (hoặc Fast Track DoD tương ứng).
 - **Read-only Task**: Hoàn tất khi báo cáo, phân tích và bằng chứng xác minh đã được cung cấp (không tạo commit code).
+
+<a id="quality-gate-applicability"></a>
+### D. Bảng Áp Dụng Quality Gates (Canonical)
+
+AGENTS sở hữu applicability và quyền miễn áp dụng; [Verification Standard](docs/standards/verification.md#risk-test-matrix) sở hữu ma trận kiểm thử và cách ghi evidence. Project profile ánh xạ từng gate sang command thực tế của stack.
+
+| Loại công việc | Automated tests / checks | Architecture fitness | Commit |
+| :--- | :--- | :--- | :--- |
+| Standard EXECUTE, kể cả docs ảnh hưởng policy P0/P1 | Chạy các suites liên quan nếu có test runner, checks theo ma trận risk và diff; docs phải review links/tính nhất quán | Bắt buộc PASS, Exit code 0 | Có thay đổi cần lưu trữ: conditional commit theo §2.C |
+| Fast Track có source changes (CSS, comments/format source, unit tests thuần) hoặc có khả năng ảnh hưởng ranh giới kiến trúc | Checks phù hợp với diff, tests liên quan; UI cần manual checks khi áp dụng | Bắt buộc PASS, Exit code 0 | Theo §2.C |
+| Fast Track docs-only, không ảnh hưởng source/ranh giới kiến trúc và không chạm Hard Stop | Diff, links/format, tính nhất quán; tests runtime N/A nếu không có tác động, ghi lý do | N/A có lý do; có thể chạy thêm nếu hữu ích | Theo §2.C |
+| COMPOSE / INVESTIGATE / READ_ONLY / REVIEW thuần túy | Checks cần cho kết luận khảo sát/review; execution gates N/A vì không thực thi thay đổi | N/A cho phase thuần túy; review vẫn phải xác minh evidence gate của implementation khi áp dụng | Không commit code theo profile đầu ra; quyền artifact theo workflow |
+
+- Thiếu validator hoặc command tương đương ở hàng bắt buộc là **BLOCKED / thiếu gate**, không phải N/A; phải cấu hình gate trước khi tuyên bố đạt DoD. Không bịa script.
+- Không có test runner: ghi N/A cho automated suite, vẫn phải thực hiện checks/manual evidence phù hợp với ma trận risk. Thiếu môi trường cho integration/manual check bắt buộc là BLOCKED, không phải N/A.
+- Risk xác định theo blast radius trước khi dùng bảng; docs điều khiển quyền/gate P0/P1 vẫn là Standard. N/A phải có căn cứ từ diff/profile; SKIPPED/NOT_RUN không phải PASS. Gate remote CI bắt buộc phải được xác minh trên đúng commit.
 
 ---
 
@@ -179,7 +195,7 @@ Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy đ
 3. **No Raw Env**: Cấm gọi trực tiếp `process.env.*` rải rác; bắt buộc import qua schema validation tập trung (`src/lib/env.ts`).
 
 ### B. Review-Enforced Invariants (Kiểm Định Qua Investigation, Review & Preflight)
-4. **Server Trust Boundary**: Mọi query DB phải scope theo `userId` từ session đã xác thực ở server; cấm tin cậy client params.
+4. **Server Trust Boundary**: Query dữ liệu user/tenant phải scope theo identity và quyền được server xác thực; public/master-data/system-job dùng authority và scope tương ứng theo [Rule 4](docs/fitness-functions/architecture-rules.md#rule-server-trust-boundary). Cấm lấy client params làm authority hoặc dùng nhãn public/job để bỏ kiểm tra quyền.
 5. **Stateless Services & Repositories**: Service singletons cấm lưu `userId` hay request context trong biến instance (`this.*`).
 6. **Expand-and-Contract Migrations**: Không bao giờ đổi tên hoặc drop cột cùng lúc; tuân thủ chu trình Expand -> Backfill -> Read Transition -> Contract.
 7. **Performance Guardrails**: Cấm query danh sách không giới hạn (unbounded query), chỉ query cột cần thiết trên hot path, bắt buộc phân trang, chống N+1 (xem [docs/standards/performance.md](docs/standards/performance.md)).
@@ -189,20 +205,9 @@ Nguồn sự thật chuẩn hóa cho các quy tắc kiến trúc được quy đ
 
 ## 7. Phân Cấp Luồng Trọng Yếu & Độ Nhạy Rủi Ro (Critical Flows P0 - P4)
 
-| Mức Độ | Tên Luồng | Phạm Vi Điển Hình | Tác Động Khi Lỗi | Auto Risk & Ràng Buộc |
-| :--- | :--- | :--- | :--- | :--- |
-| **P0** | **System Survival** | Xác thực, session context, core execution loop, tính sẵn sàng & an toàn cổng thanh toán (Payment availability, webhook authenticity, unauthorized charge prevention) | Hệ thống tê liệt hoàn toàn hoặc mất kiểm soát bảo mật | **CRITICAL** (Cấm Fast Track, full regression test) |
-| **P1** | **Revenue & Integrity** | Toàn vẹn giao dịch thanh toán (Charging, renewal, refund, ledger updates, reconciliation, idempotency), đồng bộ CSDL, master data seeding | Mất doanh thu, sai lệch DB vĩnh viễn | **HIGH** (Cấm Fast Track, integration test bắt buộc) |
-| **P2** | **Core Business** | Luồng bài học, tiến trình luyện tập chính, quản lý tài nguyên nghiệp vụ chính | Tính năng chính bị gián đoạn nhưng hệ thống còn hoạt động | **MEDIUM** (Unit + Integration test) |
-| **P3** | **Convenience** | Tìm kiếm nâng cao, bộ lọc phụ, xuất file CSV/PDF, push notification | Giảm tính tiện dụng, có giải pháp thay thế | **LOW** (Unit test chuẩn) |
-| **P4** | **Nice to Have** | UI polish, CSS, typo, micro-copy | Thẩm mỹ, không đổi hành vi | **TRIVIAL** (Được dùng Fast Track) |
+Nguồn chuẩn duy nhất cho P0–P4, mapping risk, tie-breaking và impact escalation là [Critical Flows](docs/operations/critical-flows.md). [System map](docs/system-map/critical-paths.md) ánh xạ flow cụ thể; [Verification Standard](docs/standards/verification.md#risk-test-matrix) quy định test matrix.
 
-> [!IMPORTANT]
-> **Nguyên tắc ưu tiên mức rủi ro cao nhất (Tie-Breaking Rule):**  
-> Nếu một luồng, tính năng hoặc tác vụ đồng thời chạm vào nhiều cấp độ, bắt buộc áp dụng cấp độ rủi ro cao nhất (**P0 > P1 > P2 > P3 > P4**).
-
-*Luật nâng rủi ro theo tác động (Impact-Based Risk Escalation):*  
-Rủi ro được phân loại theo hành vi và bán kính tác động (blast radius), không chỉ theo vị trí file. Một task được tự động nâng lên `risk_level: HIGH` hoặc `CRITICAL` nếu thay đổi có thể ảnh hưởng trực tiếp hoặc gián tiếp đến invariant, contract hoặc runtime execution của luồng **P0 / P1**, bắt buộc tuân thủ Standard 3-Step Path.
+P0 bảo vệ system survival/security và core execution loop của hệ thống; luồng học/luyện tập thông thường là P2. Nếu blast radius chạm invariant/contract/runtime P0 hoặc P1, áp dụng mức cao nhất theo taxonomy và bắt buộc Standard, cấm Fast Track. Applicability của gate theo §5.D; không hạ risk chỉ vì file là Markdown.
 
 ---
 
