@@ -1,6 +1,5 @@
 # Project Profile: Aegis-SEOS
 
-- Khảo sát: 2026-10-07, repository baseline trước task bổ sung templates.
 - Phạm vi: Bộ khung quy trình Markdown và architecture validators; không có ứng dụng nghiệp vụ `src/` trong baseline.
 - Stack: Node.js, ES modules (`package.json` có `type: module`), scripts `.mjs`; manifest chưa khai báo phiên bản Node bắt buộc.
 
@@ -37,8 +36,13 @@ Trên Windows PowerShell nếu execution policy chặn `npm.ps1`, dùng `npm.cmd
 
 ## 4. Authority Và Boundaries
 
-- Context Packages hiện có phục vụ Auth và mẫu chung; task chỉ sửa quy trình tài liệu không nạp package Auth.
+- Context Packages có catalog cho docs-policy và validator; Auth là reference example, không nạp cho task quy trình tài liệu.
 - Local branch/commit theo điều kiện trong `AGENTS.md`; push/merge/deploy theo quyền được cấp, profile không cấp quyền mới.
 - Không đọc/in secrets. Tài liệu môi trường chỉ ghi tên biến/schema, không ghi giá trị credentials.
 
 Mẫu cho dự án tiếp nhận: [Project profile template](../templates/project-profile.md).
+
+## Survey evidence
+
+- Khảo sát: 2026-10-07, repository baseline trước task bổ sung templates.
+- Ngày khảo sát không nằm trong prefix policy chung; capability cần xác minh lại khi task thay tooling/contracts.

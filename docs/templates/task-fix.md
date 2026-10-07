@@ -60,7 +60,7 @@ Ghi PASS / FAIL / SKIPPED / NOT_RUN / BLOCKED / N/A có lý do. Manual checks gh
 
 - Plan revision được duyệt (`approved_revision`): [Revision hoặc bản ghi nhận diện nội dung].
 - Approval evidence: [Developer hoặc reviewer được ủy quyền, timestamp có timezone, nguồn approval].
-- Chỉ đặt `approval_status: approved` khi có approval rõ ràng đúng revision và giải quyết các vấn đề cần quyết định. `execution_status` chuyển độc lập theo Agent Workflow.
+- Chỉ đặt `approval_status: approved` khi có approval rõ ràng đúng revision và giải quyết các vấn đề cần quyết định. `execution_status` chuyển độc lập theo [Task Lifecycle](../operations/task-lifecycle.md).
 
 ## 6. Execution Checkpoint / Handoff
 

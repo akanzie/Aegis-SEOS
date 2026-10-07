@@ -1,6 +1,6 @@
 # Task Authoring: Từ Yêu Cầu Đến Approved Plan
 
-Mẫu dùng trực tiếp: [Batch prompt](../templates/batch-prompt.md), [Task fix](../templates/task-fix.md), [Task feature](../templates/task-feat.md). Copy tới `docs/tasks/<request>/`, điền bằng chứng thực tế và giữ plan `draft` tới khi được duyệt.
+Mẫu dùng trực tiếp: [Batch prompt](../templates/batch-prompt.md), [Task fix](../templates/task-fix.md), [Task feature](../templates/task-feat.md). Copy tới `docs/tasks/<request>/`, điền bằng chứng thực tế và giữ `approval_status: pending`, `execution_status: not_started` tới khi được duyệt.
 
 ## 1. Chuẩn hóa yêu cầu trong COMPOSE
 
@@ -39,7 +39,7 @@ created_by: <author>
 
 Risk dùng `TRIVIAL | LOW | MEDIUM | HIGH | CRITICAL`, tương ứng P4 đến P0; ghi mức cao nhất của blast radius.
 
-Plan cần: yêu cầu gốc/AC/spec active; root cause hoặc thiết kế có bằng chứng; scope và callers/contracts bị ảnh hưởng; thay đổi tối thiểu; test matrix và lệnh thật; compatibility/rollback khi cần; Open Issues nếu còn. Approval độc lập execution, nhận diện nội dung được duyệt qua `approved_revision`; ghi người duyệt và timestamp có timezone, không suy đoán metadata. Còn Open Issues cần quyết định thì giữ `approval_status: pending`. Hai status trục cũ có mapping tại [Agent Workflow](../operations/agent-workflow.md#lifecycle-transitions).
+Plan cần: yêu cầu gốc/AC/spec active; root cause hoặc thiết kế có bằng chứng; scope và callers/contracts bị ảnh hưởng; thay đổi tối thiểu; test matrix và lệnh thật; compatibility/rollback khi cần; Open Issues nếu còn. Approval độc lập execution, nhận diện nội dung được duyệt qua `approved_revision`; ghi người duyệt và timestamp có timezone, không suy đoán metadata. Còn Open Issues cần quyết định thì giữ `approval_status: pending`. Hai status trục cũ có compatibility tại [Task Lifecycle](../operations/task-lifecycle.md#lifecycle-transitions).
 
 Không yêu cầu manifest JSON, hash, DAG scheduler hoặc pipeline riêng cho task thủ công. Mục tiêu là traceability đủ dùng.
 

@@ -1,27 +1,19 @@
-# First-Class Context Packages
+# Context Packages
 
-Context Packages là cơ chế chính thức để kiểm soát ngân sách token và ngăn ngừa hiện tượng ảo giác (hallucination) cho AI Agent.
+Context Package liệt kê tài liệu và interfaces cần đọc cho từng scope, giúp giới hạn token và tránh nạp ngoài scope. Đây là catalog, không thay [routing map](../../AGENTS.md#routing-map).
 
-Thay vì để AI tự do quét toàn bộ cây mã nguồn hoặc đoán xem cần đọc file nào, mỗi domain / tính năng trọng yếu sẽ có 1 Context Package tương ứng trong thư mục này.
+| Package | Scope / phase | Trạng thái | Target |
+| :--- | :--- | :--- | :--- |
+| [Docs policy](docs-policy-context.md) | Workflow/governance/docs; investigate/execute/review | Verified paths; xác minh revision khi dùng | <=15k |
+| [Validator](validator-context.md) | Validator/rules; investigate/execute/review | Verified paths/commands; xác minh revision khi dùng | <=15k |
+| [Auth](auth-context.md) | Authentication/identity | Reference example; chưa có runtime auth được xác minh | <=15k |
+| [Template](template.md) | Tạo package | Mẫu, không phải package active | Theo scope |
 
----
+## Cách dùng
 
-## 1. Cấu Trúc Của Một Context Package Chuẩn
+1. Must Load là tập tối thiểu; chọn sections trong scope, không đọc lại file đã nạp cùng revision.
+2. Optional ghi trigger cụ thể; trigger áp dụng thì nạp owner/check bắt buộc.
+3. Do Not Load loại scope ngoài task; trace thêm callers/contracts khi có evidence trong blast radius.
+4. Target mặc định <=15k là mục tiêu package, không hard cap session. Ngưỡng/overflow thuộc [AGENTS §8](../../AGENTS.md#context-budget).
 
-Mỗi file trong `docs/context-packages/<domain>.md` tuân theo cấu trúc:
-
-1. **Must Load (Bắt Buộc Đọc)**: Danh sách tối thiểu các files đặc tả nghiệp vụ, ranh giới và interfaces.
-2. **Optional (Đọc Khi Cần Thiết)**: Các files bổ trợ chỉ đọc khi gặp edge case liên quan.
-3. **Do Not Load (Tuyệt Đối Cấm Đọc)**: Các module ngoại vi không liên quan (ví dụ: đang làm Auth thì cấm đọc Billing, Media, Analytics).
-4. **Target Token Budget**: Mục tiêu kích thước riêng của package (mặc định `<= 15,000` tokens), không phải hard cap của session. Session bands và overflow action canonical nằm trong [AGENTS §8](../../AGENTS.md#context-budget).
-
----
-
-## 2. Danh Sách Context Packages Có Sẵn
-
-- [template.md](template.md) — Mẫu chuẩn để tạo Context Package mới.
-- [auth-context.md](auth-context.md) — Reference package cho Authentication & Identity; file tự ghi rõ trạng thái mẫu vì repo hiện không có runtime auth domain đã xác minh.
-
-## 3. Package thiếu hoặc chưa đủ
-
-Nếu không có package đúng scope, ghi rõ và đọc tối thiểu task, spec active, boundaries và code/tests trực tiếp. Must Load là điểm bắt đầu; trace thêm contracts/callers khi có bằng chứng nằm trong blast radius, không nạp package ngoại vi đón đầu. Cập nhật package nếu task phát hiện đường dẫn lỗi thời hoặc thiếu interface quan trọng. Không áp dụng package Auth cho task chỉ làm quy trình tài liệu.
+Thiếu package: ghi rõ, đọc tối thiểu task/spec active/boundaries/code/tests trực tiếp; không đoán đường dẫn hoặc dùng Auth cho docs policy. Cập nhật đường dẫn/interface lỗi thời trong scope được phép. Thứ tự/cập nhật prefix ở [Context Assembly](../governance/context-assembly.md).
