@@ -4,8 +4,8 @@ approval_status: approved
 approved_by: Developer
 approved_at: "2026-10-07T13:10:10+07:00"
 approved_revision: e1aceac80d8b81d5618a201dd5a9e6bbb7cd6f0f
-execution_status: pending_verification
-closed_at: null
+execution_status: completed
+closed_at: "2026-10-07T13:31:50+07:00"
 merged_at: null
 critical_flow: P0
 risk_level: CRITICAL
@@ -69,13 +69,13 @@ worktree: "shared checkout; execute sequentially"
 
 ## 4. Verification Matrix
 
-| AC / invariant | Kịch bản và lý do | Lệnh thực tế / manual procedure | Kết quả | Bằng chứng / revision |
+| AC / invariant | Kịch bản và lý do | Lệnh thực tế / manual procedure | Result / Kết quả | Evidence / revision |
 | :--- | :--- | :--- | :--- | :--- |
 | AC-1 | Operator mới gặp một outcome có hai phần tách được và một outcome không có trạng thái trung gian an toàn; áp dụng sizing rules và ví dụ để chọn tách/gộp, rồi phân biệt task kéo dài nhiều session với handoff cho bước nhỏ. PASS khi hai trường hợp cho ra quyết định nhất quán và có lý do dựa trên AC/khả năng nghiệm thu độc lập. | Static review Task Authoring và OAuth example | PASS | Manual review tại working tree trên branch `task/task-sizing-handoff`; task plan `approved_revision` `e1aceac80d8b81d5618a201dd5a9e6bbb7cd6f0f` |
 | AC-2 | Hai task cùng request chạy tuần tự; hai task không xung đột chạy song song; hai task có cùng checkout/write scope thì không chạy đồng thời. Kiểm tra ID, owner, write scope/worktree, `depends_on`, và điều kiện readiness gồm approval/revision + completed + linked output evidence. PASS khi record mẫu biểu diễn đủ thông tin và mọi xung đột/thiếu dependency đều chặn chạy song song/tiếp tục. | Static review workflow, lifecycle, templates; `npm.cmd run validate:tasks` | PASS | Static review PASS; `npm.cmd run validate:tasks` Exit 0, checked 7 records; branch `task/task-sizing-handoff` |
 | AC-3 | Resume từ task record có diff mới, blocker và finding ngoài scope; đối chiếu frontmatter, approval revision và §6 checkpoint. PASS khi operator tìm được một trạng thái canonical, next action/authority; approval/revision mismatch dừng việc phụ thuộc và finding được ghi/escalate đúng owner. | Cold-start walkthrough từ request index qua task record và handoff | PASS | Workflow §2.5–8, task lifecycle §6/dependency readiness, task record §6; static walkthrough PASS trên working tree |
 | AC-4 | So sánh task record và handoff cho một session nhỏ. PASS khi handoff chỉ link trạng thái/evidence đã ghi, bổ sung finding/evidence mới, không yêu cầu handoff cho từng bước nhỏ và không lặp approval/AC/status đã có. | Static consistency review Tasks README, Handoff Contract và template | PASS | Static consistency review PASS trên working tree; Handoff Contract và template link task/checkpoint, chỉ ghi evidence/findings mới |
-| Docs/policy gates | Kiểm tra toàn bộ owner/direct summaries, links, anchors, authority/gate language và tình huống trust boundary; profile xác nhận repo không có ứng dụng runtime OAuth. Runtime full-flow checks N/A vì task chỉ sửa policy docs/templates và ví dụ OAuth được ghi rõ là giả lập. | `npm.cmd run validate:docs`; `npm.cmd run validate:tasks`; `npm.cmd test`; `npm.cmd run test:fitness`; manual policy review | PASS | Validators Exit 0 (77 Markdown files, 7 task records); tests Exit 0 (9/9 architecture, 6/6 quality); fitness Exit 0, reference mode / 0 source files; self-review PASS; Developer independent implementation review PASS trong chat `2026-10-07T13:26:27+07:00`, không có findings |
+| Docs/policy gates | Kiểm tra toàn bộ owner/direct summaries, links, anchors, authority/gate language và tình huống trust boundary; profile xác nhận repo không có ứng dụng runtime OAuth. Runtime full-flow checks N/A vì task chỉ sửa policy docs/templates và ví dụ OAuth được ghi rõ là giả lập. | `npm.cmd run validate:docs`; `npm.cmd run validate:tasks`; `npm.cmd test`; `npm.cmd run test:fitness`; manual policy review | PASS | Validators Exit 0 (77 Markdown files, 7 task records); tests Exit 0 (9/9 architecture, 6/6 quality); fitness Exit 0, reference mode / 0 source files; self-review PASS; Developer independent implementation review PASS trong chat `2026-10-07T13:26:27+07:00`, không có findings; post-commit checks PASS trên `f9f7c3a660e5000c5107f5161b422fecc8b9048d` |
 
 ## 5. Open Issues Và Approval
 
@@ -91,6 +91,6 @@ worktree: "shared checkout; execute sequentially"
 
 ## 6. Execution Checkpoint / Handoff
 
-- Đã làm / checks đã chạy / findings còn mở: Đã cập nhật Task Authoring, Agent Workflow, Task Lifecycle, Handoff Contract, Tasks index, task templates và handoff template; AC-1–AC-4/manual consistency self-review PASS. Developer independent review implementation/evidence PASS trong chat `2026-10-07T13:26:27+07:00`, không có findings. Checked trên HEAD `618cd55dcef242ae44a08c33a867f38a89ede64c` cùng working-tree diff; tracked docs/templates diff fingerprint `3a35961a01c33944df1c0812774ffab3a8388119`. `npm.cmd run validate:docs` Exit 0 (77 files); `npm.cmd run validate:tasks` Exit 0 (7 records); `npm.cmd test` Exit 0 (9/9 architecture, 6/6 quality); `npm.cmd run test:fitness` Exit 0 (reference mode, 0 source files; không chứng minh runtime architecture). `git diff --check` PASS. Không có dependency đầu vào (`depends_on: []`).
-- Branch / revision / staged scope / conditional commit: Branch `task/task-sizing-handoff`; baseline `618cd55dcef242ae44a08c33a867f38a89ede64c`; Task 1 record và tám owner docs/templates staged. Prompt và Task 2 vẫn là untracked baseline inputs, không thuộc commit Task 1.
-- DoD / bước tiếp theo / authority: Implementation review và required local checks PASS; `execution_status: pending_verification` tới khi implementation commit và post-commit checks đạt. Sau đó ghi `completed`/`closed_at` và close metadata theo Task Lifecycle.
+- Đã làm / checks đã chạy / findings còn mở: Đã cập nhật Task Authoring, Agent Workflow, Task Lifecycle, Handoff Contract, Tasks index, task templates và handoff template; AC-1–AC-4/manual consistency self-review PASS. Developer independent review implementation/evidence PASS trong chat `2026-10-07T13:26:27+07:00`, không có findings. Implementation commit `f9f7c3a660e5000c5107f5161b422fecc8b9048d` trên baseline `618cd55dcef242ae44a08c33a867f38a89ede64c`; docs/templates diff fingerprint `3a35961a01c33944df1c0812774ffab3a8388119`. Pre-commit và post-commit: `npm.cmd run validate:docs` Exit 0 (77 files); `npm.cmd run validate:tasks` Exit 0 (7 records); `npm.cmd test` Exit 0 (9/9 architecture, 6/6 quality); `npm.cmd run test:fitness` Exit 0 (reference mode, 0 source files; không chứng minh runtime architecture). `git diff --check` PASS. Không có dependency đầu vào (`depends_on: []`).
+- Branch / revision / staged scope / conditional commit: Branch `task/task-sizing-handoff`; implementation commit `f9f7c3a660e5000c5107f5161b422fecc8b9048d` trên baseline `618cd55dcef242ae44a08c33a867f38a89ede64c`; close commit chỉ cập nhật lifecycle metadata. Prompt và Task 2 vẫn là untracked baseline inputs, không thuộc commit Task 1.
+- DoD / bước tiếp theo / authority: Standard DoD hoàn tất; `execution_status: completed`, `closed_at: 2026-10-07T13:31:50+07:00`, `merged_at: null`. Không còn task action; merge/deploy vẫn theo authority riêng.
