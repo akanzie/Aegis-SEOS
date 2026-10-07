@@ -14,9 +14,9 @@ Bàn giao có độ dài tương xứng thay đổi. Task nhỏ chỉ cần tóm
 6. **Next Authority**: Bước tiếp theo và chủ thể có quyền approve/merge/deploy. Kết luận merge-ready chỉ sau Merge Review Gate đạt trên đúng source/target SHA.
 
 ```markdown
-| AC | Expected behavior | Verification | Result | Evidence |
+| AC | Expected behavior | Verification | Actual result | Evidence / revision |
 | :--- | :--- | :--- | :--- | :--- |
-| AC-1 | <observable outcome> | <test/check/manual> | <actual status> | <location/revision> |
+| AC-1 | [Expected behavior from acceptance source] | [Actual command or manual scenario] | [PASS/FAIL/BLOCKED/N/A with reason] | [Evidence location and checked revision] |
 ```
 
 Thông tin bàn giao không chứa secrets, auth headers hoặc PII thô. Session chưa hoàn tất cần lưu checkpoint trong task với bước đã làm, bằng chứng, blocker và bước tiếp theo; không thay plan approved âm thầm. Reviewer độc lập bắt buộc theo [decision table](review-rework.md#independent-review); ghi reviewer, scope và revision đã xem. Close order/timestamps theo [lifecycle contract](task-lifecycle.md#close-sequence).

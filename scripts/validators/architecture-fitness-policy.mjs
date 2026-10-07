@@ -12,6 +12,8 @@ import { pathToFileURL } from 'node:url';
  * To retain defaults while adding custom entries, import DEFAULT_CONFIG and spread it.
  */
 export const DEFAULT_CONFIG = {
+  // `reference` is suitable for this docs-only repository; application profiles fail closed.
+  profileMode: 'reference',
   // Directories to scan for source files (repository-relative)
   sourceRoots: ['src'],
 
@@ -40,7 +42,9 @@ export const DEFAULT_CONFIG = {
     'fastify',
     'react',
     'react-dom',
-    'axios'
+    'axios',
+    'node:http',
+    'node:https'
   ],
 
   // Forbidden modules in Client Components (Rule 2: Client/Server Isolation)
@@ -58,6 +62,9 @@ export const DEFAULT_CONFIG = {
     'server-only',
     /^node:/
   ],
+
+  // Built-in network APIs which cannot be represented as module imports.
+  forbiddenDomainGlobals: ['fetch'],
 
   // Centralized environment files permitted to access raw process.env (Rule 3)
   allowedEnvFiles: [
@@ -144,10 +151,21 @@ export function validateConfig(config, rootDir) {
   validatePatternArray('domainPatterns', config.domainPatterns);
   validatePatternArray('forbiddenDomainModules', config.forbiddenDomainModules);
   validatePatternArray('forbiddenClientModules', config.forbiddenClientModules);
+  validateStringArray('forbiddenDomainGlobals', config.forbiddenDomainGlobals);
   validatePatternArray('testFilePatterns', config.testFilePatterns);
 
   if (config.sourceRoots.length === 0) {
     throw new Error('sourceRoots must contain at least one source directory.');
+  }
+
+  for (const name of ['forbiddenDomainModules', 'forbiddenClientModules', 'forbiddenDomainGlobals']) {
+    if (config[name].length === 0) {
+      throw new Error(`${name} must not be empty; an empty deny list silently disables a boundary rule.`);
+    }
+  }
+
+  if (!['application', 'reference'].includes(config.profileMode)) {
+    throw new TypeError('profileMode must be "application" or "reference".');
   }
 
   // Ensure all sourceRoots are within repository boundaries
@@ -160,8 +178,8 @@ export function validateConfig(config, rootDir) {
     resolveRepositoryPath(f, 'allowedEnvFiles entry', rootDir)
   );
 
-  if (config.clientDirective !== null && typeof config.clientDirective !== 'string') {
-    throw new TypeError('clientDirective must be a string or null.');
+  if (typeof config.clientDirective !== 'string' || config.clientDirective.trim() === '') {
+    throw new TypeError('clientDirective must be a non-empty string; disabling the client boundary is unsupported.');
   }
 
   if (typeof config.rawEnvTestExemption !== 'boolean') {
@@ -212,7 +230,7 @@ export async function loadConfig(rootDir) {
       const fileUrl = pathToFileURL(fullPath).href;
       const imported = await import(fileUrl);
       const custom = imported.default || imported;
-      const merged = { ...DEFAULT_CONFIG, ...custom, _configSource: filename };
+      const merged = { ...DEFAULT_CONFIG, ...custom, profileMode: custom.profileMode ?? 'application', _configSource: filename };
       return validateConfig(merged, rootDir);
     } catch (err) {
       throw new Error(

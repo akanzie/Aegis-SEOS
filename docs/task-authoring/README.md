@@ -8,7 +8,9 @@ Phân biệt FACT (quan sát/bằng chứng), REQUIREMENT (mong muốn), ASSUMPT
 
 Prompt chỉ cần intent, actual/expected và AC quan sát được. Thêm scope, invariants, risk P0–P4 và dependencies khi có ý nghĩa. Không đoán file code/test hay lệnh chưa được xác minh; investigator tìm vị trí thật.
 
-AC mô tả hành vi với điều kiện và kết quả pass/fail rõ ràng. Gắn ý định kiểm chứng `AUTOMATED_TEST`, `STATIC_CHECK`, `E2E` hoặc `MANUAL`; chưa có bằng chứng thì không ghi PASS. Ví dụ: “Khi mất mạng, thao tác đã xác nhận không bị mất sau tải lại”, thay vì “viết hook tối ưu”.
+AC mô tả hành vi với điều kiện và kết quả quan sát được, pass/fail rõ ràng, truy về acceptance source. Mỗi task cần ít nhất một AC hoàn chỉnh; không để placeholder. Gắn ý định kiểm chứng `AUTOMATED_TEST`, `STATIC_CHECK`, `E2E` hoặc `MANUAL`; verification matrix phải bao phủ từng AC. Với mỗi hành vi liên quan, nêu happy path, boundary và error path; thêm auth, concurrency hoặc compatibility khi blast radius áp dụng. Chưa có bằng chứng thì không ghi PASS. Ví dụ: “Khi mất mạng, thao tác đã xác nhận không bị mất sau tải lại”, thay vì “viết hook tối ưu”.
+
+Trước khi handoff, tự review task record: acceptance source khớp AC; AC quan sát được; verification bao phủ AC và các trường hợp áp dụng; không còn placeholder; scope, assumptions, checks và evidence khớp nhau. `npm run validate:tasks` kiểm tra cấu trúc tối thiểu, không thay thế judgment về nghiệp vụ.
 
 ## 2. Phân rã theo kết quả
 

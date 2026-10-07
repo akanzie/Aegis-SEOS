@@ -12,6 +12,7 @@ SEOS cung cấp lõi quy trình; project profile mô tả công nghệ và cách
 - Tạo/cập nhật `docs/operations/project-profile.md` từ bằng chứng thực tế: lệnh setup/test/fitness/static checks/build; môi trường local/test/staging/production; gate bắt buộc; các khả năng chưa có và cách bổ sung.
 - Xác định sources of truth cho spec, schema, ORM, dữ liệu nguồn và generated artifacts; owner, quy trình generate/validate, lệnh chỉ dùng local và tác vụ cần approval.
 - Lập critical flows, context packages đúng domain và commands tương đương cho stack hiện tại. Không tự cho phép thao tác remote hoặc deployment qua project profile.
+- Mỗi system map và context package phải nêu module paths, entry points, local conventions, và trạng thái exemplar/reference so với runtime đã xác minh. API/library claims cần version, implementation hoặc type evidence; không suy capability từ ví dụ hay tên package. Nếu version không pin hoặc implementation/types chưa xác minh, ghi rõ `UNVERIFIED`.
 
 ## 2. Bổ sung standards khi có nhu cầu thực tế
 

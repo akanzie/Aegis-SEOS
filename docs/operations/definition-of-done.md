@@ -6,12 +6,12 @@
 
 1. **Approved Task**: Task plan (`task-*-fix.md` hoặc `task-*-feat.md`) có approval record hợp lệ cho revision/scope hiện hành (`approval_status: approved`); agent không tự duyệt. Approval độc lập execution và được giữ khi completed.
 2. **Spec Synchronized**: Đặc tả nghiệp vụ (`docs/main_docs/<ACTIVE_VERSION>/fn/`) đã được cập nhật đồng bộ nếu có thay đổi hành vi (`Spec Impact: CHANGE/CLARIFICATION`).
-3. **Automated Tests Pass**: Các checks bắt buộc theo [bảng áp dụng gate](../../AGENTS.md#quality-gate-applicability) và [ma trận kiểm thử](../standards/verification.md#risk-test-matrix) đã PASS; N/A có lý do được ghi rõ.
+3. **Automated Tests Pass**: Verification matrix ánh xạ mỗi AC tới kết quả thực tế và revision được kiểm tra. Các checks bắt buộc theo [bảng áp dụng gate](../../AGENTS.md#quality-gate-applicability) và [ma trận kiểm thử](../standards/verification.md#risk-test-matrix) đã PASS; N/A có lý do được policy cho phép và ghi rõ. SKIPPED/NOT_RUN không phải PASS.
 4. **Architecture Fitness Pass**: Gate Standard theo [bảng áp dụng](../../AGENTS.md#quality-gate-applicability) thực thi thành công với Exit code 0.
 5. **No Open Assumptions**: Toàn bộ giả định mở hoặc xung đột kiến trúc/nghiệp vụ đã được giải quyết triệt để.
 6. **Documentation & Memory Updated**: Đã cập nhật ADR (nếu chạm trigger), pitfalls/lessons (nếu phát hiện bẫy mới).
 7. **Clean Conditional Commit**: Commit cục bộ thành công trên task branch hợp lệ (`task/*`, `feat/*`, `fix/*`, hoặc `hotfix/*`), không sót file nhạy cảm hay file rác.
-8. **Evidence & Handoff**: Mỗi AC có kết quả và bằng chứng theo [Verification Standard](../standards/verification.md); hoàn tất kiểm tra bắt buộc, gồm independent review và kiểm tra thủ công khi áp dụng theo [Review & Rework](review-rework.md#independent-review). Bàn giao theo [Handoff Contract](handoff-contract.md). Không xem skipped/not run là PASS.
+8. **Evidence & Handoff**: Mỗi AC có expected behavior, check, actual result, revision và bằng chứng theo [Verification Standard](../standards/verification.md). Gate bắt buộc không được đổi thành N/A/SKIPPED/NOT_RUN để né áp dụng; N/A chỉ hợp lệ khi canonical policy cho phép và có lý do/profile evidence. Hoàn tất kiểm tra bắt buộc, gồm independent review và kiểm tra thủ công khi áp dụng theo [Review & Rework](review-rework.md#independent-review). Bàn giao theo [Handoff Contract](handoff-contract.md).
 
 ### B. Fast Track DoD (Áp dụng cho Fast Track Changes)
 

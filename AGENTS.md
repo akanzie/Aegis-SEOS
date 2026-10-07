@@ -23,6 +23,8 @@ Nêu giả định; hỏi khi mơ hồ về nghiệp vụ, dữ liệu, API, sec
 
 ## 2. Safety & Git
 
+Không làm checks xanh bằng cách xóa/bỏ qua test, thêm `.only`, thu hẹp test discovery/coverage, nới validator exclusions, thêm suppression không được hỗ trợ, hoặc fallback im lặng. Thay đổi gate cần lý do, scope, authority và evidence thay thế được review; implementation không tự cấp ngoại lệ.
+
 ### A. Secrets và privacy
 
 Cấm đọc, ghi hoặc in nội dung `.env`, `.env.local`, `*.key`, `*.pem`, DB credentials, JWT tokens. Được đọc `.env.example`, tên biến và env schema (`src/lib/env.ts` hoặc `src/config/env.ts`). Không log password, session token, cookie, auth header hoặc PII thô; theo [Observability](docs/standards/observability.md).

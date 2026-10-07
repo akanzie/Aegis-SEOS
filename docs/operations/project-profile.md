@@ -9,12 +9,14 @@ Applicability thuộc [AGENTS §5.D](../../AGENTS.md#quality-gate-applicability)
 
 | Mục đích | Lệnh | Nguồn | Phạm vi / giới hạn |
 | :--- | :--- | :--- | :--- |
-| Automated tests | `npm test` | `package.json` -> `scripts/validators/architecture-fitness.test.mjs` | Tests cho validator, không phải regression ứng dụng nghiệp vụ |
-| Architecture fitness | `npm run test:fitness` | `package.json` -> `scripts/validators/architecture-fitness.mjs` | Luật machine-enforced theo architecture-rules; không chứng minh toàn bộ security invariants |
-| Docs verification | Review diff, links và tính nhất quán | `docs/standards/verification.md` | Kiểm tra theo diff; policy P0/P1 vẫn Standard, chạy tests validator rồi fitness |
+| Automated tests | `npm test` | `package.json` -> architecture-fitness + quality-guardrails test suites | Isolated fixtures for architecture, task-record and Markdown-link validator behavior; not application regression |
+| Architecture fitness | `npm run test:fitness` | `package.json` -> `scripts/validators/architecture-fitness.mjs` | Machine rules and printed scope/limitations; unresolved imports block with exit 2; zero-source reference result is not architecture proof |
+| Task records | `npm run validate:tasks` | `scripts/validators/validate-task-records.mjs` | AC/acceptance/verification structure and placeholder check; terminal legacy records may keep external handoff evidence; not business approval |
+| Markdown links | `npm run validate:docs` | `scripts/validators/validate-markdown-links.mjs` | Internal Markdown files and anchors under AGENTS/docs, excluding archive |
+| Docs verification | Review diff, links and policy consistency | `docs/standards/verification.md` | Policy P0/P1 remains Standard; run tests, docs/task validators, then fitness |
 | Setup / lint / typecheck / build / E2E | Chưa khai báo scripts tương ứng | `package.json` | Không suy ra lệnh từ ví dụ bootstrap |
 
-Chạy `npm test` xong rồi mới chạy fitness: tests validator có thể tạo fixture cấu hình tạm ở root. Xem `docs/project-memory/known-pitfalls.md`, mục 4.
+Tests use an owned OS temporary directory and do not modify root architecture config files. Keep commands sequential when they share files or fixtures; this project's suites are currently isolated.
 
 Trên Windows PowerShell nếu execution policy chặn `npm.ps1`, dùng `npm.cmd test` và `npm.cmd run test:fitness`; không cần thay execution policy.
 

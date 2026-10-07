@@ -282,7 +282,102 @@ export function parseSourceFile(cleanCode) {
   }
 
   flushToken();
+
+  // The token scanner above covers direct dot access. These bounded forms also
+  // catch bracket access and common destructured/local aliases without claiming
+  // general JavaScript data-flow analysis.
+  const executableCode = maskStringLiterals(cleanCode);
+  const envPatterns = [
+    /\bprocess\s*(?:\.\s*env\b|\[\s*['"]env['"]\s*\])/g
+  ];
+  const processAliases = [...executableCode.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*process\b/g)].map((m) => m[1]);
+  const envAliases = [];
+  for (const match of executableCode.matchAll(/\b(?:const|let|var)\s*\{([^}]+)\}\s*=\s*process\b/g)) {
+    for (const item of match[1].split(',')) {
+      const parts = item.trim().split(/\s*:\s*/);
+      if (parts[0] === 'env') envAliases.push(parts[1] ?? 'env');
+    }
+  }
+  for (const alias of processAliases) {
+    envPatterns.push(new RegExp(`\\b${escapeForRegExp(alias)}\\s*(?:\\.\\s*env\\b|\\[\\s*['"]env['"]\\s*\\])`, 'g'));
+  }
+  for (const alias of envAliases) {
+    envPatterns.push(new RegExp(`\\b${escapeForRegExp(alias)}\\s*(?:\\.|\\[)`, 'g'));
+  }
+  const knownEnvIndexes = new Set(rawEnvAccesses.map((item) => item.index));
+  for (const pattern of envPatterns) {
+    for (const match of executableCode.matchAll(pattern)) {
+      if (!knownEnvIndexes.has(match.index)) {
+        rawEnvAccesses.push({ index: match.index, raw: match[0] });
+        knownEnvIndexes.add(match.index);
+      }
+    }
+  }
+  rawEnvAccesses.sort((a, b) => a.index - b.index);
   return { imports, rawEnvAccesses };
+}
+
+function escapeForRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function maskStringLiterals(code) {
+  const output = code.split('');
+  const templates = [];
+  let state = 'code';
+  let quote = '';
+
+  const mask = (index) => {
+    if (output[index] !== '\n' && output[index] !== '\r') output[index] = ' ';
+  };
+
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i];
+    const next = code[i + 1] ?? '';
+    if (state === 'code') {
+      if (char === "'" || char === '"') {
+        quote = char;
+        state = 'quoted';
+        mask(i);
+      } else if (char === '`') {
+        templates.push({ inExpression: false, depth: 0 });
+        state = 'template';
+        mask(i);
+      } else if (templates.length > 0 && templates.at(-1).inExpression) {
+        if (char === '{') templates.at(-1).depth++;
+        else if (char === '}') {
+          if (templates.at(-1).depth === 0) {
+            templates.at(-1).inExpression = false;
+            state = 'template';
+          } else templates.at(-1).depth--;
+        }
+      }
+    } else if (state === 'quoted') {
+      mask(i);
+      if (char === '\\' && i + 1 < code.length) {
+        mask(i + 1);
+        i++;
+      } else if (char === quote) {
+        state = 'code';
+      }
+    } else if (state === 'template') {
+      mask(i);
+      if (char === '\\' && i + 1 < code.length) {
+        mask(i + 1);
+        i++;
+      } else if (char === '`') {
+        templates.pop();
+        state = 'code';
+      } else if (char === '$' && next === '{') {
+        mask(i + 1);
+        templates.at(-1).inExpression = true;
+        templates.at(-1).depth = 0;
+        state = 'code';
+        i++;
+      }
+    }
+  }
+  return output.join('');
 }
 
 function getLineNumber(content, index) {
@@ -368,11 +463,14 @@ export async function runValidator({ rootDir = ROOT_DIR, isStrict = IS_STRICT } 
   console.log('====================================================');
 
   const config = await loadConfig(rootDir);
+  const profileMode = config.profileMode;
   if (config._configSource) {
     console.log(`⚙️  [POLICY] Loaded custom policy from ${config._configSource}`);
   } else {
     console.log('ℹ️  [POLICY] Using default reference policy (zero-config mode)');
   }
+  console.log(`📋 Policy mode: ${profileMode}`);
+  console.log(`📌 Configured source roots: ${config.sourceRoots.join(', ')}`);
 
   // Collect source files from all configured sourceRoots with deduplication
   const allFileSet = new Set();
@@ -389,76 +487,118 @@ export async function runValidator({ rootDir = ROOT_DIR, isStrict = IS_STRICT } 
     }
   }
 
+  const missingRoots = config.sourceRoots.filter((root) => !existingRoots.includes(root));
+  if (missingRoots.length > 0 && (isStrict || profileMode === 'application')) {
+    console.error(`❌ [FAIL] ${profileMode === 'application' ? 'Application profile' : 'Strict mode'}: configured source root(s) missing (${missingRoots.join(', ')}).`);
+    process.exit(1);
+  }
+
   if (existingRoots.length === 0) {
     if (isStrict) {
       console.error(`❌ [FAIL] Strict mode: none of the configured source roots exist (${config.sourceRoots.join(', ')}).`);
       process.exit(1);
     }
-    console.log(`ℹ️  No configured source roots detected (${config.sourceRoots.join(', ')}). Architecture boundaries intact.`);
-    console.log('✅ [PASS] 0 violations found across 0 files.');
+    console.log(`ℹ️  No source roots were found (${config.sourceRoots.join(', ')}); no architecture rules were evaluated.`);
+    console.log('ℹ️  Scanned source files: 0.');
+    console.log('ℹ️  Limitations: source absence means this result does not establish architecture compliance.');
     return { violations: [], exitCode: 0 };
   }
 
   // Deterministically sorted unique file list
   const allFiles = [...allFileSet].sort();
+  console.log(`ℹ️  Scanned source files: ${allFiles.length}.`);
 
   if (isStrict && allFiles.length === 0) {
     console.error(`❌ [FAIL] Strict mode: no supported source files found in source roots (${existingRoots.join(', ')}).`);
     process.exit(1);
   }
 
+  if (allFiles.length === 0) {
+    if (profileMode === 'application') {
+      console.error(`❌ [FAIL] Application profile: no supported source files found in configured roots (${existingRoots.join(', ')}).`);
+      process.exit(1);
+    }
+    console.log(`ℹ️  Existing reference roots contain no supported source files (${existingRoots.join(', ')}); no architecture rules were evaluated.`);
+    console.log('ℹ️  Scanned source files: 0.');
+    console.log('ℹ️  Limitations: zero scanned files means this result does not establish architecture compliance.');
+    return { violations: [], exitCode: 0 };
+  }
+
   console.log(`📁 Scanning ${allFiles.length} source file(s) across roots [${existingRoots.join(', ')}]...`);
+  console.log(`ℹ️  Limitations: lexer-based import checks; unresolved aliases, computed/dynamic imports and general data flow require review.`);
+  console.log('ℹ️  Review required for every unresolved import, unsupported syntax, or boundary case the scanner cannot resolve.');
 
   const allowedEnvSet = new Set(config.allowedEnvFiles);
-  const directivePattern = config.clientDirective
-    ? new RegExp(`^\\s*['"]${escapeRegExp(config.clientDirective)}['"]\\s*;?`)
-    : null;
+  const directivePattern = new RegExp(`^\\s*['"]${escapeRegExp(config.clientDirective)}['"]\\s*;?`);
+
+  const sourceFileSet = new Set(allFiles.map((file) => path.resolve(file)));
+  const reviewRequired = new Set();
+  function resolveRelativeImport(fromFile, specifier) {
+    if (!specifier.startsWith('.')) return null;
+    const base = path.resolve(path.dirname(fromFile), specifier);
+    const candidates = [base, ...['.ts', '.tsx', '.js', '.jsx', '.mjs'].map((ext) => `${base}${ext}`), ...['index.ts', 'index.tsx', 'index.js', 'index.jsx', 'index.mjs'].map((name) => path.join(base, name))];
+    return candidates.find((candidate) => sourceFileSet.has(path.resolve(candidate))) ?? null;
+  }
+
+  function inspectModuleGraph(startFile, forbiddenModules, ruleLabel) {
+    const visited = new Set();
+    const queue = [{ filePath: startFile, depth: 0, chain: [] }];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const absolutePath = path.resolve(current.filePath);
+      if (visited.has(absolutePath)) continue;
+      visited.add(absolutePath);
+      const raw = fs.readFileSync(absolutePath, 'utf-8');
+      const clean = stripComments(raw);
+      const { imports } = parseSourceFile(clean);
+      for (const imp of imports) {
+        const lineNum = getLineNumber(clean, imp.index);
+        const snippet = getLineSnippet(raw, lineNum);
+        const matched = checkForbiddenModule(imp.specifier, forbiddenModules);
+        if (matched) {
+          const via = current.depth > 0 ? `Indirect dependency via ${current.chain.join(' -> ')}: ` : '';
+          addViolation(ruleLabel, normalizeRelativePath(current.filePath), lineNum,
+            `${via}forbidden module "${imp.specifier}" (matched "${matched}"): "${snippet}"`);
+        }
+        const resolved = resolveRelativeImport(absolutePath, imp.specifier);
+        if (resolved && !visited.has(path.resolve(resolved))) {
+          queue.push({ filePath: resolved, depth: current.depth + 1, chain: [...current.chain, normalizeRelativePath(resolved)] });
+        } else if (!resolved && (imp.specifier.startsWith('.') || imp.specifier.startsWith('@/') || imp.specifier.startsWith('~/'))) {
+          reviewRequired.add(`${normalizeRelativePath(current.filePath)}:${lineNum} unresolved local/aliased import "${imp.specifier}"`);
+        }
+      }
+      if (ruleLabel.includes('Domain') && config.forbiddenDomainGlobals.length > 0) {
+        for (const globalName of config.forbiddenDomainGlobals) {
+          const callPattern = new RegExp(`\\b${escapeRegExp(globalName)}\\s*\\(`, 'g');
+          for (const match of clean.matchAll(callPattern)) {
+            const lineNum = getLineNumber(clean, match.index);
+            const snippet = getLineSnippet(raw, lineNum);
+            const via = current.depth > 0 ? `Indirect dependency via ${current.chain.join(' -> ')}: ` : '';
+            addViolation(ruleLabel, normalizeRelativePath(current.filePath), lineNum,
+              `${via}domain code cannot call network global "${globalName}": "${snippet}"`);
+          }
+        }
+      }
+    }
+  }
 
   for (const filePath of allFiles) {
     const relPath = normalizeRelativePath(filePath);
     const rawContent = fs.readFileSync(filePath, 'utf-8');
     const cleanContent = stripComments(rawContent);
+    for (const match of cleanContent.matchAll(/\b(?:import|require)\s*\(\s*(?!['"])[^)]*\)/g)) {
+      const lineNum = getLineNumber(cleanContent, match.index);
+      reviewRequired.add(`${relPath}:${lineNum} computed/dynamic module expression requires source-aware review`);
+    }
 
     const isDomain = isDomainFile(relPath, config.domainPatterns);
-    const isClientComponent = directivePattern
-      ? directivePattern.test(cleanContent.replace(/^\uFEFF/, ''))
-      : false;
+    const isClientComponent = directivePattern.test(cleanContent.replace(/^\uFEFF/, ''));
     const isEnvConfigFile = allowedEnvSet.has(relPath);
     const isTest = isTestFile(relPath, config);
 
-    const { imports, rawEnvAccesses } = parseSourceFile(cleanContent);
-
-    // Check Rule 1 & Rule 2: Module Imports
-    if (isDomain || isClientComponent) {
-      for (const imp of imports) {
-        const lineNum = getLineNumber(cleanContent, imp.index);
-        const snippet = getLineSnippet(rawContent, lineNum);
-
-        if (isDomain) {
-          const matched = checkForbiddenModule(imp.specifier, config.forbiddenDomainModules);
-          if (matched) {
-            addViolation(
-              'Rule 1 (Domain Purity)',
-              relPath,
-              lineNum,
-              `Domain layer cannot import forbidden infrastructure, framework, UI, or network module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
-            );
-          }
-        }
-
-        if (isClientComponent) {
-          const matched = checkForbiddenModule(imp.specifier, config.forbiddenClientModules);
-          if (matched) {
-            addViolation(
-              'Rule 2 (Client/Server Isolation)',
-              relPath,
-              lineNum,
-              `'use client' component cannot import forbidden server-only, database, or Node.js module "${imp.specifier}" (matched "${matched}"): "${snippet}"`
-            );
-          }
-        }
-      }
-    }
+    const { rawEnvAccesses } = parseSourceFile(cleanContent);
+    if (isDomain) inspectModuleGraph(filePath, config.forbiddenDomainModules, 'Rule 1 (Domain Purity)');
+    if (isClientComponent) inspectModuleGraph(filePath, config.forbiddenClientModules, 'Rule 2 (Client/Server Isolation)');
 
     // Check Rule 3: No Raw process.env
     if (!isEnvConfigFile && !isTest) {
@@ -475,6 +615,14 @@ export async function runValidator({ rootDir = ROOT_DIR, isStrict = IS_STRICT } 
     }
   }
 
+  for (const reviewItem of reviewRequired) console.warn(`⚠️ [REVIEW REQUIRED] ${reviewItem}`);
+
+  if (violations.length === 0 && reviewRequired.size > 0) {
+    console.error('⛔ [BLOCKED] No machine violation was found, but unresolved cases require manual review; this fitness run is not PASS.');
+    process.exitCode = 2;
+    return { violations, reviewRequired: [...reviewRequired], exitCode: 2 };
+  }
+
   // Summary & Exit
   if (violations.length > 0) {
     console.error('\n❌ [FAIL] Architecture Boundary Violations Detected:');
@@ -488,6 +636,7 @@ export async function runValidator({ rootDir = ROOT_DIR, isStrict = IS_STRICT } 
     console.log('✅ [PASS] All architecture boundaries validated successfully! (0 violations)');
     process.exit(0);
   }
+
 }
 
 function isMainModule() {

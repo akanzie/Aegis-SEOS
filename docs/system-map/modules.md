@@ -3,6 +3,8 @@
 Hệ thống tuân thủ kiến trúc phân tầng phân ly trách nhiệm rõ rệt (Clean / Hexagonal Architecture).
 *Nguồn sự thật cho các luật cấm và máy chấm tự động*: [docs/fitness-functions/architecture-rules.md](../fitness-functions/architecture-rules.md).
 
+**Trạng thái repo hiện tại:** sơ đồ tầng và các `src/...` path bên dưới là exemplar cho dự án áp dụng, không phải module runtime đã tồn tại trong repository này. Runtime đã xác minh ở đây là validator dưới `scripts/validators/`: `architecture-fitness.mjs` (CLI entry point), `architecture-fitness-policy.mjs` (policy loader), cùng test/quality validators. Conventions có thể xác minh trong các `.mjs` scripts; không có app `src/` baseline.
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │               Presentation Layer (UI)                  │
